@@ -1,0 +1,223 @@
+{% extends 'calibration/base.html' %}
+
+{% block title %}История расчетов - Калькулятор перекачки из резервуаров{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-clock-history me-2"></i>
+                История расчетов откачки
+            </h2>
+            <a href="{% url 'calibration:home' %}" class="btn btn-primary">
+                <i class="bi bi-calculator me-1"></i>
+                Новый расчет
+            </a>
+        </div>
+
+        {% if calculations %}
+            <div class="card shadow">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Дата/Время</th>
+                                    <th>Резервуар</th>
+                                    <th>Продукт</th>
+                                    <th>Плотность (кг/л)</th>
+                                    <th>Начальная высота (см)</th>
+                                    <th>Вес откачки (кг)</th>
+                                    <th>Высота после откачки (см)</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for calc in calculations %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">{{ calc.timestamp|date:"d.m.Y" }}</div>
+                                        <small class="text-muted">{{ calc.timestamp|time:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ calc.tank.name }}</div>
+                                        <small class="text-muted">{{ calc.tank.capacity_liters|floatformat:0 }}L</small>
+                                    </td>
+                                    <td>{{ calc.product.name }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ calc.density_kg_per_liter|floatformat:4 }}</span>
+                                    </td>
+                                    <td>{{ calc.initial_height_cm|floatformat:2 }}</td>
+                                    <td>{{ calc.transfer_weight_kg|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="fw-bold text-primary">{{ calc.final_height_cm|floatformat:2 }}</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                type="button" 
+                                                data-bs-toggle="collapse" 
+                                                data-bs-target="#details-{{ calc.id }}" 
+                                                aria-expanded="false">
+                                            <i class="bi bi-eye me-1"></i>
+                                            Подробности
+                                        </button>
+                                        <form method="post" action="{% url 'calibration:delete_calculation' calc.id %}" 
+                                              class="d-inline" 
+                                              onsubmit="return confirm('Вы уверены, что хотите удалить этот расчет?')">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="8" class="p-0">
+                                        <div class="collapse" id="details-{{ calc.id }}">
+                                            <div class="card card-body border-0 bg-light m-2">
+                                                <h6 class="mb-3">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    Подробная информация о расчете откачки
+                                                </h6>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <div class="card h-100">
+                                                            <div class="card-header bg-primary text-white">
+                                                                <h6 class="mb-0">Входные данные</h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <table class="table table-sm table-borderless mb-0">
+                                                                    <tr>
+                                                                        <td><i class="bi bi-building me-1"></i>Резервуар:</td>
+                                                                        <td><strong>{{ calc.tank.name }}</strong></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><i class="bi bi-droplet me-1"></i>Продукт:</td>
+                                                                        <td><strong>{{ calc.product.name }}</strong></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><i class="bi bi-speedometer me-1"></i>Плотность:</td>
+                                                                        <td><strong>{{ calc.density_kg_per_liter|floatformat:4 }} кг/л</strong></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><i class="bi bi-rulers me-1"></i>Начальная высота:</td>
+                                                                        <td><strong>{{ calc.initial_height_cm|floatformat:2 }} см</strong></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><i class="bi bi-arrow-down-circle me-1"></i>Вес откачки:</td>
+                                                                        <td><strong>{{ calc.transfer_weight_kg|floatformat:2 }} кг</strong></td>
+                                                                    </tr>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="card h-100">
+                                                            <div class="card-header bg-success text-white">
+                                                                <h6 class="mb-0">Результаты</h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <table class="table table-sm table-borderless mb-0">
+                                                                    <tr>
+                                                                        <td><i class="bi bi-droplet-half me-1"></i>Начальный объем:</td>
+                                                                        <td><strong>{{ calc.initial_volume_liters|floatformat:2 }} л</strong></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><i class="bi bi-droplet me-1"></i>Объем после откачки:</td>
+                                                                        <td><strong>{{ calc.final_volume_liters|floatformat:2 }} л</strong></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><i class="bi bi-arrow-down-circle me-1"></i>Откачанный объем:</td>
+                                                                        <td><strong>{{ calc.volume_added_liters|floatformat:2 }} л</strong></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><i class="bi bi-arrows-vertical me-1"></i>Высота после откачки:</td>
+                                                                        <td><strong class="text-success">{{ calc.final_height_cm|floatformat:2 }} см</strong></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><i class="bi bi-percent me-1"></i>Заполнение:</td>
+                                                                        <td><strong>{{ calc.fill_percentage|floatformat:1 }}%</strong></td>
+                                                                    </tr>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3">
+                                                    {% if calc.notes %}
+                                                    <div class="alert alert-info">
+                                                        <i class="bi bi-sticky me-2"></i>
+                                                        <strong>Примечания:</strong> {{ calc.notes }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="alert alert-light">
+                                                        <i class="bi bi-lightbulb me-2"></i>
+                                                        <strong>Метод интерполяции:</strong> 
+                                                        {% if calc.interpolation_method == 'linear' %}
+                                                            Линейная интерполяция
+                                                        {% elif calc.interpolation_method == 'spline' %}
+                                                            Сплайн-интерполяция (кубическая)
+                                                        {% else %}
+                                                            {{ calc.interpolation_method }}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Навигация по страницам" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">Первая</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+        {% else %}
+            <div class="text-center py-5">
+                <div class="display-1 text-muted mb-3">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <h4 class="text-muted mb-3">История расчетов пуста</h4>
+                <p class="text-muted mb-4">Расчеты откачки, которые вы выполните, будут отображаться здесь.</p>
+                <a href="{% url 'calibration:home' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-calculator me-2"></i>
+                    Выполнить первый расчет
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
