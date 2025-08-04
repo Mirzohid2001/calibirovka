@@ -244,3 +244,199 @@ class TransferCalculation(models.Model):
     @property
     def density(self):
         return self.density_kg_per_liter
+
+
+class VolumeWeightCalculation(models.Model):
+    """Модель для расчетов объема и веса"""
+    # Входные данные
+    tank = models.ForeignKey(
+        Tank, 
+        on_delete=models.CASCADE,
+        verbose_name="Резервуар"
+    )
+    product = models.ForeignKey(
+        Product, 
+        on_delete=models.CASCADE,
+        verbose_name="Продукт"
+    )
+    height_cm = models.FloatField(
+        validators=[MinValueValidator(0)],
+        verbose_name="Высота жидкости (см)",
+        help_text="Уровень жидкости в сантиметрах"
+    )
+    density_kg_per_liter = models.FloatField(
+        validators=[MinValueValidator(0.0001)],
+        verbose_name="Плотность (кг/л)",
+        help_text="Плотность продукта в килограммах на литр",
+        default=1.0
+    )
+    
+    # Рассчитанные результаты
+    volume_liters = models.FloatField(
+        verbose_name="Объем (л)",
+        help_text="Рассчитанный объем на основе калибровки",
+        default=0.0
+    )
+    weight_kg = models.FloatField(
+        verbose_name="Вес (кг)",
+        help_text="Рассчитанный вес (объем × плотность)",
+        default=0.0
+    )
+    fill_percentage = models.FloatField(
+        verbose_name="Процент заполнения",
+        help_text="Процент заполнения резервуара",
+        default=0.0
+    )
+    
+    # Метаданные
+    interpolation_method = models.CharField(
+        max_length=20, 
+        default='spline',
+        verbose_name="Метод интерполяции",
+        help_text="Метод, используемый для интерполяции"
+    )
+    notes = models.TextField(
+        blank=True, 
+        null=True,
+        verbose_name="Примечания"
+    )
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Время расчета"
+    )
+
+    class Meta:
+        verbose_name = "Расчет объема и веса"
+        verbose_name_plural = "Расчеты объема и веса"
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.tank.name} - {self.product.name} ({self.timestamp.strftime('%d.%m.%Y %H:%M')})"
+
+    @property
+    def tank_name(self):
+        return self.tank.name
+    
+    @property
+    def product_name(self):
+        return self.product.name
+        
+    @property
+    def density(self):
+        return self.density_kg_per_liter
+
+
+class AddingCalculation(models.Model):
+    """Модель для расчетов добавления жидкости"""
+    # Входные данные
+    tank = models.ForeignKey(
+        Tank, 
+        on_delete=models.CASCADE,
+        verbose_name="Резервуар"
+    )
+    product = models.ForeignKey(
+        Product, 
+        on_delete=models.CASCADE,
+        verbose_name="Продукт"
+    )
+    current_height_cm = models.FloatField(
+        validators=[MinValueValidator(0)],
+        verbose_name="Текущая высота (см)",
+        help_text="Текущий уровень жидкости в сантиметрах"
+    )
+    density_kg_per_liter = models.FloatField(
+        validators=[MinValueValidator(0.0001)],
+        verbose_name="Плотность (кг/л)",
+        help_text="Плотность продукта в килограммах на литр",
+        default=1.0
+    )
+    amount_type = models.CharField(
+        max_length=10,
+        choices=[('weight', 'Вес (кг)'), ('volume', 'Объем (л)')],
+        verbose_name="Тип количества",
+        help_text="Тип добавляемого количества"
+    )
+    amount_value = models.FloatField(
+        validators=[MinValueValidator(0.01)],
+        verbose_name="Количество для добавления",
+        help_text="Количество жидкости для добавления"
+    )
+    
+    # Рассчитанные результаты
+    current_volume_liters = models.FloatField(
+        verbose_name="Текущий объем (л)",
+        help_text="Рассчитанный текущий объем",
+        default=0.0
+    )
+    current_weight_kg = models.FloatField(
+        verbose_name="Текущий вес (кг)",
+        help_text="Рассчитанный текущий вес",
+        default=0.0
+    )
+    added_volume_liters = models.FloatField(
+        verbose_name="Добавленный объем (л)",
+        help_text="Объем жидкости, который будет добавлен",
+        default=0.0
+    )
+    added_weight_kg = models.FloatField(
+        verbose_name="Добавленный вес (кг)",
+        help_text="Вес жидкости, который будет добавлен",
+        default=0.0
+    )
+    final_volume_liters = models.FloatField(
+        verbose_name="Конечный объем (л)",
+        help_text="Объем после добавления",
+        default=0.0
+    )
+    final_weight_kg = models.FloatField(
+        verbose_name="Конечный вес (кг)",
+        help_text="Вес после добавления",
+        default=0.0
+    )
+    final_height_cm = models.FloatField(
+        verbose_name="Конечная высота (см)",
+        help_text="Высота после добавления",
+        default=0.0
+    )
+    fill_percentage = models.FloatField(
+        verbose_name="Процент заполнения",
+        help_text="Процент заполнения резервуара после добавления",
+        default=0.0
+    )
+    
+    # Метаданные
+    interpolation_method = models.CharField(
+        max_length=20, 
+        default='spline',
+        verbose_name="Метод интерполяции",
+        help_text="Метод, используемый для интерполяции"
+    )
+    notes = models.TextField(
+        blank=True, 
+        null=True,
+        verbose_name="Примечания"
+    )
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Время расчета"
+    )
+
+    class Meta:
+        verbose_name = "Расчет добавления"
+        verbose_name_plural = "Расчеты добавления"
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.tank.name} - {self.product.name} ({self.timestamp.strftime('%d.%m.%Y %H:%M')})"
+
+    @property
+    def tank_name(self):
+        return self.tank.name
+    
+    @property
+    def product_name(self):
+        return self.product.name
+        
+    @property
+    def density(self):
+        return self.density_kg_per_liter

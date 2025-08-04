@@ -1,0 +1,131 @@
+{% extends 'calibration/base.html' %}
+
+{% load static %}
+
+{% block title %}Выбор калькулятора - Калькуляторы резервуаров{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-primary">
+                    <i class="bi bi-calculator me-3"></i>
+                    Калькуляторы резервуаров
+                </h1>
+                <p class="lead text-muted">
+                    Выберите нужный калькулятор для выполнения расчетов
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <!-- Калькулятор откачки -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="bi bi-arrow-down-circle text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Калькулятор откачки</h4>
+                            <p class="card-text text-muted">
+                                Рассчитывает остаток в резервуаре после откачки указанного веса жидкости
+                            </p>
+                            <ul class="list-unstyled text-start small">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Выбор резервуара</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Ввод текущей высоты</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Расчет остатка</li>
+                            </ul>
+                            <a href="{% url 'calibration:home' %}" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-arrow-down-circle me-2"></i>
+                                Открыть калькулятор
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Калькулятор объема и веса -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="bi bi-rulers text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Калькулятор объема и веса</h4>
+                            <p class="card-text text-muted">
+                                Рассчитывает объем и вес жидкости в резервуаре по высоте и плотности
+                            </p>
+                            <ul class="list-unstyled text-start small">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Выбор резервуара</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Ввод высоты жидкости</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Расчет объема и веса</li>
+                            </ul>
+                            <a href="{% url 'calibration:volume_weight_calculator' %}" class="btn btn-success btn-lg w-100">
+                                <i class="bi bi-rulers me-2"></i>
+                                Открыть калькулятор
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Калькулятор добавления -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="bi bi-plus-circle text-info" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Калькулятор добавления</h4>
+                            <p class="card-text text-muted">
+                                Рассчитывает конечную высоту после добавления жидкости в резервуар
+                            </p>
+                            <ul class="list-unstyled text-start small">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Выбор резервуара</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Ввод количества для добавления</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Расчет конечной высоты</li>
+                            </ul>
+                            <a href="{% url 'calibration:adding_calculator' %}" class="btn btn-info btn-lg w-100">
+                                <i class="bi bi-plus-circle me-2"></i>
+                                Открыть калькулятор
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Дополнительная информация -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Информация о калькуляторах
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Общие возможности:</h6>
+                                    <ul class="mb-0">
+                                        <li>Использование калибровочных данных резервуаров</li>
+                                        <li>Точные расчеты с интерполяцией</li>
+                                        <li>Сохранение истории расчетов</li>
+                                        <li>Поддержка различных продуктов</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Требования:</h6>
+                                    <ul class="mb-0">
+                                        <li>Настроенные резервуары в админ-панели</li>
+                                        <li>Калибровочные данные для резервуаров</li>
+                                        <li>Добавленные продукты</li>
+                                        <li>Точные значения плотности</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

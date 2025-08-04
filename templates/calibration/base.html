@@ -17,20 +17,30 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'calibration:home' %}">
-                <i class="bi bi-arrow-down-circle me-2"></i>
-                Калькулятор откачки
+            <a class="navbar-brand" href="{% url 'calibration:calculator_selector' %}">
+                <i class="bi bi-calculator me-2"></i>
+                Калькуляторы резервуаров
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" 
-                           href="{% url 'calibration:home' %}">
-                            <i class="bi bi-calculator me-1"></i>Калькулятор
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="calculatorsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-calculator me-1"></i>Калькуляторы
                         </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'calibration:home' %}">
+                                <i class="bi bi-arrow-down-circle me-2"></i>Калькулятор откачки
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'calibration:volume_weight_calculator' %}">
+                                <i class="bi bi-rulers me-2"></i>Калькулятор объема и веса
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'calibration:adding_calculator' %}">
+                                <i class="bi bi-plus-circle me-2"></i>Калькулятор добавления
+                            </a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}" 

@@ -1,6 +1,6 @@
 {% extends 'calibration/base.html' %}
 
-{% block title %}История расчетов - Калькулятор перекачки из резервуаров{% endblock %}
+{% block title %}История расчетов - Калькуляторы резервуаров{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -8,9 +8,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>
                 <i class="bi bi-clock-history me-2"></i>
-                История расчетов откачки
+                История всех расчетов
             </h2>
-            <a href="{% url 'calibration:home' %}" class="btn btn-primary">
+            <a href="{% url 'calibration:calculator_selector' %}" class="btn btn-primary">
                 <i class="bi bi-calculator me-1"></i>
                 Новый расчет
             </a>
@@ -24,12 +24,10 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Дата/Время</th>
+                                    <th>Тип расчета</th>
                                     <th>Резервуар</th>
                                     <th>Продукт</th>
-                                    <th>Плотность (кг/л)</th>
-                                    <th>Начальная высота (см)</th>
-                                    <th>Вес откачки (кг)</th>
-                                    <th>Высота после откачки (см)</th>
+                                    <th>Описание</th>
                                     <th>Действия</th>
                                 </tr>
                             </thead>
@@ -41,28 +39,37 @@
                                         <small class="text-muted">{{ calc.timestamp|time:"H:i" }}</small>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold">{{ calc.tank.name }}</div>
-                                        <small class="text-muted">{{ calc.tank.capacity_liters|floatformat:0 }}L</small>
+                                        {% if calc.type == 'transfer' %}
+                                            <span class="badge bg-primary">
+                                                <i class="bi bi-arrow-down-circle me-1"></i>Откачка
+                                            </span>
+                                        {% elif calc.type == 'volume_weight' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-rulers me-1"></i>Объем/Вес
+                                            </span>
+                                        {% elif calc.type == 'adding' %}
+                                            <span class="badge bg-info">
+                                                <i class="bi bi-plus-circle me-1"></i>Добавление
+                                            </span>
+                                        {% endif %}
                                     </td>
-                                    <td>{{ calc.product.name }}</td>
                                     <td>
-                                        <span class="badge bg-info">{{ calc.density_kg_per_liter|floatformat:4 }}</span>
+                                        <div class="fw-semibold">{{ calc.tank_name }}</div>
                                     </td>
-                                    <td>{{ calc.initial_height_cm|floatformat:2 }}</td>
-                                    <td>{{ calc.transfer_weight_kg|floatformat:2 }}</td>
+                                    <td>{{ calc.product_name }}</td>
                                     <td>
-                                        <span class="fw-bold text-primary">{{ calc.final_height_cm|floatformat:2 }}</span>
+                                        <small class="text-muted">{{ calc.description }}</small>
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary" 
                                                 type="button" 
                                                 data-bs-toggle="collapse" 
-                                                data-bs-target="#details-{{ calc.id }}" 
+                                                data-bs-target="#details-{{ calc.type }}-{{ calc.object.id }}" 
                                                 aria-expanded="false">
                                             <i class="bi bi-eye me-1"></i>
                                             Подробности
                                         </button>
-                                        <form method="post" action="{% url 'calibration:delete_calculation' calc.id %}" 
+                                        <form method="post" action="{% url 'calibration:delete_calculation' calc.object.id %}" 
                                               class="d-inline" 
                                               onsubmit="return confirm('Вы уверены, что хотите удалить этот расчет?')">
                                             {% csrf_token %}
@@ -73,93 +80,221 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td colspan="8" class="p-0">
-                                        <div class="collapse" id="details-{{ calc.id }}">
+                                    <td colspan="6" class="p-0">
+                                        <div class="collapse" id="details-{{ calc.type }}-{{ calc.object.id }}">
                                             <div class="card card-body border-0 bg-light m-2">
-                                                <h6 class="mb-3">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    Подробная информация о расчете откачки
-                                                </h6>
-                                                <div class="row g-3">
-                                                    <div class="col-md-6">
-                                                        <div class="card h-100">
-                                                            <div class="card-header bg-primary text-white">
-                                                                <h6 class="mb-0">Входные данные</h6>
+                                                {% if calc.type == 'transfer' %}
+                                                    <h6 class="mb-3">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        Подробная информация о расчете откачки
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-primary text-white">
+                                                                    <h6 class="mb-0">Входные данные</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-building me-1"></i>Резервуар:</td>
+                                                                            <td><strong>{{ calc.object.tank.name }}</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-droplet me-1"></i>Продукт:</td>
+                                                                            <td><strong>{{ calc.object.product.name }}</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-speedometer me-1"></i>Плотность:</td>
+                                                                            <td><strong>{{ calc.object.density_kg_per_liter|floatformat:4 }} кг/л</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-rulers me-1"></i>Начальная высота:</td>
+                                                                            <td><strong>{{ calc.object.initial_height_cm|floatformat:2 }} см</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-arrow-down-circle me-1"></i>Вес откачки:</td>
+                                                                            <td><strong>{{ calc.object.transfer_weight_kg|floatformat:2 }} кг</strong></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
                                                             </div>
-                                                            <div class="card-body">
-                                                                <table class="table table-sm table-borderless mb-0">
-                                                                    <tr>
-                                                                        <td><i class="bi bi-building me-1"></i>Резервуар:</td>
-                                                                        <td><strong>{{ calc.tank.name }}</strong></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><i class="bi bi-droplet me-1"></i>Продукт:</td>
-                                                                        <td><strong>{{ calc.product.name }}</strong></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><i class="bi bi-speedometer me-1"></i>Плотность:</td>
-                                                                        <td><strong>{{ calc.density_kg_per_liter|floatformat:4 }} кг/л</strong></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><i class="bi bi-rulers me-1"></i>Начальная высота:</td>
-                                                                        <td><strong>{{ calc.initial_height_cm|floatformat:2 }} см</strong></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><i class="bi bi-arrow-down-circle me-1"></i>Вес откачки:</td>
-                                                                        <td><strong>{{ calc.transfer_weight_kg|floatformat:2 }} кг</strong></td>
-                                                                    </tr>
-                                                                </table>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-success text-white">
+                                                                    <h6 class="mb-0">Результаты</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-droplet-half me-1"></i>Начальный объем:</td>
+                                                                            <td><strong>{{ calc.object.initial_volume_liters|floatformat:2 }} л</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-droplet me-1"></i>Объем после откачки:</td>
+                                                                            <td><strong>{{ calc.object.final_volume_liters|floatformat:2 }} л</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-arrow-down-circle me-1"></i>Откачанный объем:</td>
+                                                                            <td><strong>{{ calc.object.volume_added_liters|floatformat:2 }} л</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-arrows-vertical me-1"></i>Высота после откачки:</td>
+                                                                            <td><strong class="text-success">{{ calc.object.final_height_cm|floatformat:2 }} см</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-percent me-1"></i>Заполнение:</td>
+                                                                            <td><strong>{{ calc.object.fill_percentage|floatformat:1 }}%</strong></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
-                                                        <div class="card h-100">
-                                                            <div class="card-header bg-success text-white">
-                                                                <h6 class="mb-0">Результаты</h6>
+                                                {% elif calc.type == 'volume_weight' %}
+                                                    <h6 class="mb-3">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        Подробная информация о расчете объема и веса
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-success text-white">
+                                                                    <h6 class="mb-0">Входные данные</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-building me-1"></i>Резервуар:</td>
+                                                                            <td><strong>{{ calc.object.tank.name }}</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-droplet me-1"></i>Продукт:</td>
+                                                                            <td><strong>{{ calc.object.product.name }}</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-rulers me-1"></i>Высота жидкости:</td>
+                                                                            <td><strong>{{ calc.object.height_cm|floatformat:2 }} см</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-speedometer me-1"></i>Плотность:</td>
+                                                                            <td><strong>{{ calc.object.density_kg_per_liter|floatformat:4 }} кг/л</strong></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
                                                             </div>
-                                                            <div class="card-body">
-                                                                <table class="table table-sm table-borderless mb-0">
-                                                                    <tr>
-                                                                        <td><i class="bi bi-droplet-half me-1"></i>Начальный объем:</td>
-                                                                        <td><strong>{{ calc.initial_volume_liters|floatformat:2 }} л</strong></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><i class="bi bi-droplet me-1"></i>Объем после откачки:</td>
-                                                                        <td><strong>{{ calc.final_volume_liters|floatformat:2 }} л</strong></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><i class="bi bi-arrow-down-circle me-1"></i>Откачанный объем:</td>
-                                                                        <td><strong>{{ calc.volume_added_liters|floatformat:2 }} л</strong></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><i class="bi bi-arrows-vertical me-1"></i>Высота после откачки:</td>
-                                                                        <td><strong class="text-success">{{ calc.final_height_cm|floatformat:2 }} см</strong></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><i class="bi bi-percent me-1"></i>Заполнение:</td>
-                                                                        <td><strong>{{ calc.fill_percentage|floatformat:1 }}%</strong></td>
-                                                                    </tr>
-                                                                </table>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-primary text-white">
+                                                                    <h6 class="mb-0">Результаты</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-droplet-half me-1"></i>Объем:</td>
+                                                                            <td><strong>{{ calc.object.volume_liters|floatformat:2 }} л</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-weight me-1"></i>Вес:</td>
+                                                                            <td><strong>{{ calc.object.weight_kg|floatformat:2 }} кг</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-percent me-1"></i>Заполнение:</td>
+                                                                            <td><strong>{{ calc.object.fill_percentage|floatformat:1 }}%</strong></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                {% elif calc.type == 'adding' %}
+                                                    <h6 class="mb-3">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        Подробная информация о расчете добавления
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-info text-white">
+                                                                    <h6 class="mb-0">Входные данные</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-building me-1"></i>Резервуар:</td>
+                                                                            <td><strong>{{ calc.object.tank.name }}</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-droplet me-1"></i>Продукт:</td>
+                                                                            <td><strong>{{ calc.object.product.name }}</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-rulers me-1"></i>Текущая высота:</td>
+                                                                            <td><strong>{{ calc.object.current_height_cm|floatformat:2 }} см</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-speedometer me-1"></i>Плотность:</td>
+                                                                            <td><strong>{{ calc.object.density_kg_per_liter|floatformat:4 }} кг/л</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-plus-circle me-1"></i>Добавляемое количество:</td>
+                                                                            <td><strong>{{ calc.object.amount_value|floatformat:2 }} {% if calc.object.amount_type == 'weight' %}кг{% else %}л{% endif %}</strong></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-success text-white">
+                                                                    <h6 class="mb-0">Результаты</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-droplet-half me-1"></i>Текущий объем:</td>
+                                                                            <td><strong>{{ calc.object.current_volume_liters|floatformat:2 }} л</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-weight me-1"></i>Текущий вес:</td>
+                                                                            <td><strong>{{ calc.object.current_weight_kg|floatformat:2 }} кг</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-plus-circle me-1"></i>Добавляемый объем:</td>
+                                                                            <td><strong>{{ calc.object.added_volume_liters|floatformat:2 }} л</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-arrow-up-circle me-1"></i>Конечная высота:</td>
+                                                                            <td><strong class="text-success">{{ calc.object.final_height_cm|floatformat:2 }} см</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-percent me-1"></i>Заполнение:</td>
+                                                                            <td><strong>{{ calc.object.fill_percentage|floatformat:1 }}%</strong></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
                                                 <div class="mt-3">
-                                                    {% if calc.notes %}
+                                                    {% if calc.object.notes %}
                                                     <div class="alert alert-info">
                                                         <i class="bi bi-sticky me-2"></i>
-                                                        <strong>Примечания:</strong> {{ calc.notes }}
+                                                        <strong>Примечания:</strong> {{ calc.object.notes }}
                                                     </div>
                                                     {% endif %}
                                                     <div class="alert alert-light">
                                                         <i class="bi bi-lightbulb me-2"></i>
                                                         <strong>Метод интерполяции:</strong> 
-                                                        {% if calc.interpolation_method == 'linear' %}
+                                                        {% if calc.object.interpolation_method == 'linear' %}
                                                             Линейная интерполяция
-                                                        {% elif calc.interpolation_method == 'spline' %}
+                                                        {% elif calc.object.interpolation_method == 'spline' %}
                                                             Сплайн-интерполяция (кубическая)
                                                         {% else %}
-                                                            {{ calc.interpolation_method }}
+                                                            {{ calc.object.interpolation_method }}
                                                         {% endif %}
                                                     </div>
                                                 </div>
@@ -211,8 +346,8 @@
                     <i class="bi bi-clock-history"></i>
                 </div>
                 <h4 class="text-muted mb-3">История расчетов пуста</h4>
-                <p class="text-muted mb-4">Расчеты откачки, которые вы выполните, будут отображаться здесь.</p>
-                <a href="{% url 'calibration:home' %}" class="btn btn-primary btn-lg">
+                <p class="text-muted mb-4">Расчеты, которые вы выполните, будут отображаться здесь.</p>
+                <a href="{% url 'calibration:calculator_selector' %}" class="btn btn-primary btn-lg">
                     <i class="bi bi-calculator me-2"></i>
                     Выполнить первый расчет
                 </a>

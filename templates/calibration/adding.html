@@ -1,0 +1,348 @@
+{% extends 'calibration/base.html' %}
+
+{% load static %}
+
+{% block title %}Калькулятор добавления жидкости{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Калькулятор добавления жидкости
+                </h3>
+            </div>
+            <div class="card-body">
+                <form id="addingForm" method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Tank Selection -->
+                    <div class="mb-3">
+                        <label for="tank" class="form-label">
+                            <i class="bi bi-building me-1"></i>
+                            Выберите резервуар:
+                        </label>
+                        <select class="form-select" id="tank" name="tank" required>
+                            <option value="">-- Выберите резервуар --</option>
+                            {% for tank in tanks %}
+                                <option value="{{ tank.id }}" 
+                                        data-capacity="{{ tank.capacity_liters }}"
+                                        data-height="{{ tank.height_cm }}"
+                                        {% if tank.id|stringformat:"s" == request.POST.tank %}selected{% endif %}>
+                                    {{ tank.name }} ({{ tank.capacity_liters|floatformat:0 }}L, {{ tank.height_cm }}см)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Product Selection -->
+                    <div class="mb-3">
+                        <label for="product" class="form-label">
+                            <i class="bi bi-droplet me-1"></i>
+                            Выберите продукт:
+                        </label>
+                        <select class="form-select" id="product" name="product" required>
+                            <option value="">-- Выберите продукт --</option>
+                            {% for product in products %}
+                                <option value="{{ product.id }}"
+                                        {% if product.id|stringformat:"s" == request.POST.product %}selected{% endif %}>
+                                    {{ product.name }} - {{ product.description }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Current Height Input -->
+                    <div class="mb-3">
+                        <label for="current_height" class="form-label">
+                            <i class="bi bi-rulers me-1"></i>
+                            Текущая высота жидкости (см):
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="current_height" 
+                               name="current_height_cm" 
+                               placeholder="Например: 125.5"
+                               value="{{ request.POST.current_height_cm }}"
+                               required>
+                        <div class="form-text">
+                            <small class="text-muted">
+                                Введите текущую высоту жидкости в резервуаре в сантиметрах.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Density Input -->
+                    <div class="mb-3">
+                        <label for="density" class="form-label">
+                            <i class="bi bi-speedometer me-1"></i>
+                            Плотность (кг/л):
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="density" 
+                               name="density_kg_per_liter" 
+                               placeholder="Например: 0.8500"
+                               value="{{ request.POST.density_kg_per_liter }}"
+                               required>
+                        <div class="form-text">
+                            <small class="text-muted">
+                                <strong>Важно:</strong> Плотность сильно зависит от температуры. Используйте фактическую измеренную плотность для точных расчетов.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Common Density Reference -->
+                    <div class="mb-3">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-1"></i>Справочные значения плотности при 15°C:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="mb-0 small">
+                                        <li>Сырая нефть: 0.8500 кг/л</li>
+                                        <li>Бензин: 0.7200 кг/л</li>
+                                        <li>Дизельное топливо: 0.8300 кг/л</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="mb-0 small">
+                                        <li>Авиационное топливо (керосин): 0.8100 кг/л</li>
+                                        <li>Мазут: 0.9500 кг/л</li>
+                                        <li>Вода: 1.0000 кг/л</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Type Selection -->
+                    <div class="mb-3">
+                        <label for="amount_type" class="form-label">
+                            <i class="bi bi-list-check me-1"></i>
+                            Тип количества для добавления:
+                        </label>
+                        <select class="form-select" id="amount_type" name="amount_type" required>
+                            <option value="">-- Выберите тип --</option>
+                            <option value="weight" {% if request.POST.amount_type == 'weight' %}selected{% endif %}>Вес (кг)</option>
+                            <option value="volume" {% if request.POST.amount_type == 'volume' %}selected{% endif %}>Объем (л)</option>
+                        </select>
+                        <div class="form-text">
+                            <small class="text-muted">
+                                Выберите, в каких единицах вы хотите указать количество добавляемой жидкости.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Amount Value Input -->
+                    <div class="mb-3">
+                        <label for="amount_value" class="form-label">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Количество для добавления:
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="amount_value" 
+                               name="amount_value" 
+                               placeholder="Например: 15000.25"
+                               value="{{ request.POST.amount_value }}"
+                               required>
+                        <div class="form-text">
+                            <small class="text-muted">
+                                Введите количество жидкости, которое необходимо добавить в резервуар.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-info btn-lg">
+                            <i class="bi bi-calculator me-2"></i>
+                            Рассчитать конечную высоту
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Results Section -->
+                {% if result %}
+                <div class="mt-4">
+                    <div class="card bg-light">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Результаты расчета
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-building me-1"></i>Резервуар:</h6>
+                                    <p class="mb-2">{{ result.tank_name }}</p>
+                                    
+                                    <h6><i class="bi bi-droplet me-1"></i>Продукт:</h6>
+                                    <p class="mb-2">{{ result.product_name }}</p>
+                                    
+                                    <h6><i class="bi bi-rulers me-1"></i>Текущая высота:</h6>
+                                    <p class="mb-2">{{ result.current_height|floatformat:2 }} см</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-speedometer me-1"></i>Плотность:</h6>
+                                    <p class="mb-2">{{ result.density|floatformat:4 }} кг/л</p>
+                                    
+                                    <h6><i class="bi bi-plus-circle me-1"></i>Добавляемое количество:</h6>
+                                    <p class="mb-2">{{ result.amount_value|floatformat:2 }} 
+                                        {% if result.amount_type == 'weight' %}кг{% else %}л{% endif %}
+                                    </p>
+                                    
+                                    <h6><i class="bi bi-arrow-up-circle me-1"></i>Конечная высота:</h6>
+                                    <p class="mb-2 h5 text-info">{{ result.final_height|floatformat:2 }} см</p>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-droplet-half me-1"></i>Текущий объем:</h6>
+                                    <p>{{ result.current_volume|floatformat:2 }} л</p>
+                                    
+                                    <h6><i class="bi bi-weight me-1"></i>Текущий вес:</h6>
+                                    <p>{{ result.current_weight|floatformat:2 }} кг</p>
+                                    
+                                    <h6><i class="bi bi-plus-circle me-1"></i>Добавляемый объем:</h6>
+                                    <p>{{ result.added_volume|floatformat:2 }} л</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-weight me-1"></i>Добавляемый вес:</h6>
+                                    <p>{{ result.added_weight|floatformat:2 }} кг</p>
+                                    
+                                    <h6><i class="bi bi-droplet me-1"></i>Конечный объем:</h6>
+                                    <p>{{ result.final_volume|floatformat:2 }} л</p>
+                                    
+                                    <h6><i class="bi bi-weight me-1"></i>Конечный вес:</h6>
+                                    <p>{{ result.final_weight|floatformat:2 }} кг</p>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-percent me-1"></i>Заполнение резервуара:</h6>
+                                    <p>{{ result.fill_percentage|floatformat:1 }}%</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-info-circle me-1"></i>Метод интерполяции:</h6>
+                                    <p>
+                                        {% if result.interpolation_method == 'linear' %}
+                                            Линейная интерполяция
+                                        {% elif result.interpolation_method == 'spline' %}
+                                            Сплайн-интерполяция (кубическая)
+                                        {% else %}
+                                            {{ result.interpolation_method }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info mt-3">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                <strong>Расчет:</strong> Текущий объем рассчитан на основе калибровочной таблицы резервуара. 
+                                Конечный объем = Текущий объем + Добавляемый объем = {{ result.current_volume|floatformat:2 }} л + {{ result.added_volume|floatformat:2 }} л = {{ result.final_volume|floatformat:2 }} л
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Allow both comma and dot as decimal separators
+    const numericInputs = document.querySelectorAll('#current_height, #density, #amount_value');
+    
+    numericInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            // Allow digits, dots, commas, and one decimal separator
+            let value = e.target.value;
+            
+            // Replace comma with dot for internal processing
+            value = value.replace(',', '.');
+            
+            // Remove any invalid characters except digits and one dot
+            value = value.replace(/[^0-9.]/g, '');
+            
+            // Ensure only one decimal point
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            
+            e.target.value = value;
+        });
+        
+        // Validate on blur
+        input.addEventListener('blur', function(e) {
+            const value = parseFloat(e.target.value);
+            
+            if (e.target.id === 'density') {
+                if (value <= 0 || value > 5) {
+                    alert('Плотность должна быть между 0.0001 и 5.0000 кг/л');
+                    e.target.focus();
+                }
+            } else if (e.target.id === 'current_height') {
+                if (value < 0) {
+                    alert('Текущая высота не может быть отрицательной');
+                    e.target.focus();
+                }
+            } else if (e.target.id === 'amount_value') {
+                if (value <= 0) {
+                    alert('Количество для добавления должно быть положительным');
+                    e.target.focus();
+                }
+            }
+        });
+    });
+
+    // Form validation
+    document.getElementById('addingForm').addEventListener('submit', function(e) {
+        const density = parseFloat(document.getElementById('density').value);
+        const currentHeight = parseFloat(document.getElementById('current_height').value);
+        const amountValue = parseFloat(document.getElementById('amount_value').value);
+        const amountType = document.getElementById('amount_type').value;
+
+        if (isNaN(density) || density <= 0 || density > 5) {
+            alert('Пожалуйста, введите корректную плотность (0.0001-5.0000 кг/л)');
+            e.preventDefault();
+            document.getElementById('density').focus();
+            return;
+        }
+
+        if (isNaN(currentHeight) || currentHeight < 0) {
+            alert('Пожалуйста, введите корректную текущую высоту (≥ 0 см)');
+            e.preventDefault();
+            document.getElementById('current_height').focus();
+            return;
+        }
+
+        if (isNaN(amountValue) || amountValue <= 0) {
+            alert('Пожалуйста, введите корректное количество для добавления (> 0)');
+            e.preventDefault();
+            document.getElementById('amount_value').focus();
+            return;
+        }
+
+        if (!amountType) {
+            alert('Пожалуйста, выберите тип количества');
+            e.preventDefault();
+            document.getElementById('amount_type').focus();
+            return;
+        }
+    });
+});
+</script>
+{% endblock %} 

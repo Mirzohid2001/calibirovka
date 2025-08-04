@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Tank, Product, CalibrationPoint, TransferCalculation
+from .models import Tank, Product, CalibrationPoint, TransferCalculation, VolumeWeightCalculation, AddingCalculation
 
 
 @admin.register(Tank)
@@ -107,6 +107,146 @@ class TransferCalculationAdmin(admin.ModelAdmin):
                 'initial_volume_liters',
                 'final_volume_liters',
                 'volume_added_liters', 
+                'final_height_cm',
+                'fill_percentage'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Метаданные', {
+            'fields': (
+                'interpolation_method',
+                'notes',
+                'timestamp'
+            ),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('tank', 'product')
+
+    def has_add_permission(self, request):
+        # Расчеты создаются только через интерфейс приложения
+        return False
+
+
+@admin.register(VolumeWeightCalculation)
+class VolumeWeightCalculationAdmin(admin.ModelAdmin):
+    list_display = [
+        'tank', 
+        'product', 
+        'height_cm',
+        'density_kg_per_liter',
+        'volume_liters', 
+        'weight_kg',
+        'timestamp'
+    ]
+    list_filter = [
+        'tank', 
+        'product', 
+        'timestamp',
+        'interpolation_method'
+    ]
+    search_fields = [
+        'tank__name', 
+        'product__name'
+    ]
+    readonly_fields = [
+        'volume_liters',
+        'weight_kg', 
+        'fill_percentage',
+        'interpolation_method',
+        'timestamp'
+    ]
+    fieldsets = (
+        ('Входные данные', {
+            'fields': (
+                'tank', 
+                'product', 
+                'height_cm',
+                'density_kg_per_liter'
+            )
+        }),
+        ('Результаты расчета', {
+            'fields': (
+                'volume_liters',
+                'weight_kg', 
+                'fill_percentage'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Метаданные', {
+            'fields': (
+                'interpolation_method',
+                'notes',
+                'timestamp'
+            ),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('tank', 'product')
+
+    def has_add_permission(self, request):
+        # Расчеты создаются только через интерфейс приложения
+        return False
+
+
+@admin.register(AddingCalculation)
+class AddingCalculationAdmin(admin.ModelAdmin):
+    list_display = [
+        'tank', 
+        'product', 
+        'current_height_cm',
+        'density_kg_per_liter',
+        'amount_type',
+        'amount_value',
+        'final_height_cm',
+        'timestamp'
+    ]
+    list_filter = [
+        'tank', 
+        'product', 
+        'amount_type',
+        'timestamp',
+        'interpolation_method'
+    ]
+    search_fields = [
+        'tank__name', 
+        'product__name'
+    ]
+    readonly_fields = [
+        'current_volume_liters',
+        'current_weight_kg',
+        'added_volume_liters',
+        'added_weight_kg',
+        'final_volume_liters',
+        'final_weight_kg',
+        'final_height_cm',
+        'fill_percentage',
+        'interpolation_method',
+        'timestamp'
+    ]
+    fieldsets = (
+        ('Входные данные', {
+            'fields': (
+                'tank', 
+                'product', 
+                'current_height_cm',
+                'density_kg_per_liter',
+                'amount_type',
+                'amount_value'
+            )
+        }),
+        ('Результаты расчета', {
+            'fields': (
+                'current_volume_liters',
+                'current_weight_kg',
+                'added_volume_liters',
+                'added_weight_kg',
+                'final_volume_liters',
+                'final_weight_kg',
                 'final_height_cm',
                 'fill_percentage'
             ),

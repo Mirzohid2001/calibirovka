@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-from .models import Tank, Product, TransferCalculation
+from .models import Tank, Product, TransferCalculation, VolumeWeightCalculation, AddingCalculation
 import json
 import logging
 
@@ -170,10 +170,49 @@ def home(request):
 
 def history(request):
     """Страница истории расчетов"""
-    calculations_list = TransferCalculation.objects.all().order_by('-timestamp')
+    # Получить все типы расчетов
+    transfer_calculations = TransferCalculation.objects.all().order_by('-timestamp')
+    volume_weight_calculations = VolumeWeightCalculation.objects.all().order_by('-timestamp')
+    adding_calculations = AddingCalculation.objects.all().order_by('-timestamp')
+    
+    # Объединить все расчеты и отсортировать по времени
+    all_calculations = []
+    
+    for calc in transfer_calculations:
+        all_calculations.append({
+            'type': 'transfer',
+            'object': calc,
+            'timestamp': calc.timestamp,
+            'tank_name': calc.tank_name,
+            'product_name': calc.product_name,
+            'description': f"Откачка: {calc.transfer_weight_kg:.2f} кг из {calc.initial_height_cm:.2f} см → {calc.final_height_cm:.2f} см"
+        })
+    
+    for calc in volume_weight_calculations:
+        all_calculations.append({
+            'type': 'volume_weight',
+            'object': calc,
+            'timestamp': calc.timestamp,
+            'tank_name': calc.tank_name,
+            'product_name': calc.product_name,
+            'description': f"Объем и вес: {calc.height_cm:.2f} см → {calc.volume_liters:.2f} л, {calc.weight_kg:.2f} кг"
+        })
+    
+    for calc in adding_calculations:
+        all_calculations.append({
+            'type': 'adding',
+            'object': calc,
+            'timestamp': calc.timestamp,
+            'tank_name': calc.tank_name,
+            'product_name': calc.product_name,
+            'description': f"Добавление: {calc.current_height_cm:.2f} см + {calc.amount_value:.2f} {'кг' if calc.amount_type == 'weight' else 'л'} → {calc.final_height_cm:.2f} см"
+        })
+    
+    # Сортировка по времени (новые сначала)
+    all_calculations.sort(key=lambda x: x['timestamp'], reverse=True)
     
     # Пагинация
-    paginator = Paginator(calculations_list, 10)  # 10 расчетов на страницу
+    paginator = Paginator(all_calculations, 10)  # 10 расчетов на страницу
     page_number = request.GET.get('page')
     calculations = paginator.get_page(page_number)
     
@@ -187,9 +226,34 @@ def history(request):
 def delete_calculation(request, calculation_id):
     """Удалить расчет"""
     if request.method == 'POST':
-        calculation = get_object_or_404(TransferCalculation, id=calculation_id)
-        calculation.delete()
-        messages.success(request, "Расчет удален успешно.")
+        # Попробуем найти расчет во всех трех моделях
+        calculation = None
+        
+        # Проверяем TransferCalculation
+        try:
+            calculation = TransferCalculation.objects.get(id=calculation_id)
+        except TransferCalculation.DoesNotExist:
+            pass
+        
+        # Проверяем VolumeWeightCalculation
+        if not calculation:
+            try:
+                calculation = VolumeWeightCalculation.objects.get(id=calculation_id)
+            except VolumeWeightCalculation.DoesNotExist:
+                pass
+        
+        # Проверяем AddingCalculation
+        if not calculation:
+            try:
+                calculation = AddingCalculation.objects.get(id=calculation_id)
+            except AddingCalculation.DoesNotExist:
+                pass
+        
+        if calculation:
+            calculation.delete()
+            messages.success(request, "Расчет удален успешно.")
+        else:
+            messages.error(request, "Расчет не найден.")
     
     return redirect('calibration:history')
 
@@ -378,3 +442,311 @@ def calculate_transfer(request):
             'success': False,
             'error': f'Ошибка при выполнении расчета: {str(e)}'
         })
+
+
+def volume_weight_calculator(request):
+    """Калькулятор объема и веса"""
+    tanks = Tank.objects.all()
+    products = Product.objects.all()
+    
+    if request.method == 'POST':
+        try:
+            # Получить данные из формы
+            tank_id = request.POST.get('tank')
+            product_id = request.POST.get('product')
+            density_str = request.POST.get('density_kg_per_liter', '').replace(',', '.')
+            height_str = request.POST.get('height_cm', '').replace(',', '.')
+            
+            # Валидация входных данных
+            if not all([tank_id, product_id, density_str, height_str]):
+                messages.error(request, "Пожалуйста, заполните все поля.")
+                return render(request, 'calibration/volume_weight.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            # Преобразование в числа
+            try:
+                density = float(density_str)
+                height = float(height_str)
+            except ValueError:
+                messages.error(request, "Пожалуйста, введите корректные числовые значения.")
+                return render(request, 'calibration/volume_weight.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            # Валидация диапазонов
+            if density <= 0 or density > 5:
+                messages.error(request, "Плотность должна быть между 0.0001 и 5.0000 кг/л")
+                return render(request, 'calibration/volume_weight.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            if height < 0:
+                messages.error(request, "Высота не может быть отрицательной")
+                return render(request, 'calibration/volume_weight.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            # Получить объекты
+            tank = get_object_or_404(Tank, id=tank_id)
+            product = get_object_or_404(Product, id=product_id)
+            
+            # Проверить, что высота не превышает высоту резервуара
+            if height > tank.height_cm:
+                messages.error(request, f"Высота не может превышать высоту резервуара ({tank.height_cm:.2f} см)")
+                return render(request, 'calibration/volume_weight.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            # Выполнить расчеты
+            try:
+                # 1. Преобразовать высоту в объем
+                volume = tank.height_to_volume(height)
+                
+                # 2. Рассчитать вес (объем × плотность)
+                weight = volume * density
+                
+                # 3. Рассчитать процент заполнения
+                fill_percentage = (volume / tank.capacity_liters) * 100
+                
+                # 4. Определить метод интерполяции
+                calibration_points_count = tank.calibrations.count()
+                interpolation_method = 'spline' if calibration_points_count >= 4 else 'linear'
+                
+                # 5. Сохранить расчет в базе данных
+                calculation = VolumeWeightCalculation.objects.create(
+                    tank=tank,
+                    product=product,
+                    height_cm=height,
+                    density_kg_per_liter=density,
+                    volume_liters=volume,
+                    weight_kg=weight,
+                    fill_percentage=fill_percentage,
+                    interpolation_method=interpolation_method
+                )
+                
+                # 6. Подготовить результат для отображения
+                result = {
+                    'tank_name': tank.name,
+                    'product_name': product.name,
+                    'height': height,
+                    'density': density,
+                    'volume': volume,
+                    'weight': weight,
+                    'fill_percentage': fill_percentage,
+                    'interpolation_method': interpolation_method
+                }
+                
+                messages.success(request, "Расчет выполнен успешно!")
+                
+                return render(request, 'calibration/volume_weight.html', {
+                    'tanks': tanks,
+                    'products': products,
+                    'result': result
+                })
+                
+            except Exception as e:
+                logger.error(f"Ошибка расчета: {str(e)}")
+                messages.error(request, f"Ошибка при выполнении расчета: {str(e)}")
+                return render(request, 'calibration/volume_weight.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+        
+        except Exception as e:
+            logger.error(f"Общая ошибка: {str(e)}")
+            messages.error(request, "Произошла ошибка при обработке запроса.")
+            return render(request, 'calibration/volume_weight.html', {
+                'tanks': tanks,
+                'products': products
+            })
+    
+    return render(request, 'calibration/volume_weight.html', {
+        'tanks': tanks,
+        'products': products
+    })
+
+
+def adding_calculator(request):
+    """Калькулятор добавления жидкости"""
+    tanks = Tank.objects.all()
+    products = Product.objects.all()
+    
+    if request.method == 'POST':
+        try:
+            # Получить данные из формы
+            tank_id = request.POST.get('tank')
+            product_id = request.POST.get('product')
+            density_str = request.POST.get('density_kg_per_liter', '').replace(',', '.')
+            current_height_str = request.POST.get('current_height_cm', '').replace(',', '.')
+            amount_type = request.POST.get('amount_type')
+            amount_value_str = request.POST.get('amount_value', '').replace(',', '.')
+            
+            # Валидация входных данных
+            if not all([tank_id, product_id, density_str, current_height_str, amount_type, amount_value_str]):
+                messages.error(request, "Пожалуйста, заполните все поля.")
+                return render(request, 'calibration/adding.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            # Преобразование в числа
+            try:
+                density = float(density_str)
+                current_height = float(current_height_str)
+                amount_value = float(amount_value_str)
+            except ValueError:
+                messages.error(request, "Пожалуйста, введите корректные числовые значения.")
+                return render(request, 'calibration/adding.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            # Валидация диапазонов
+            if density <= 0 or density > 5:
+                messages.error(request, "Плотность должна быть между 0.0001 и 5.0000 кг/л")
+                return render(request, 'calibration/adding.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            if current_height < 0:
+                messages.error(request, "Текущая высота не может быть отрицательной")
+                return render(request, 'calibration/adding.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            if amount_value <= 0:
+                messages.error(request, "Количество для добавления должно быть положительным")
+                return render(request, 'calibration/adding.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            # Получить объекты
+            tank = get_object_or_404(Tank, id=tank_id)
+            product = get_object_or_404(Product, id=product_id)
+            
+            # Проверить, что текущая высота не превышает высоту резервуара
+            if current_height > tank.height_cm:
+                messages.error(request, f"Текущая высота не может превышать высоту резервуара ({tank.height_cm:.2f} см)")
+                return render(request, 'calibration/adding.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+            
+            # Выполнить расчеты
+            try:
+                # 1. Преобразовать текущую высоту в объем
+                current_volume = tank.height_to_volume(current_height)
+                
+                # 2. Рассчитать текущий вес
+                current_weight = current_volume * density
+                
+                # 3. Рассчитать добавляемые объем и вес
+                if amount_type == 'weight':
+                    added_weight = amount_value
+                    added_volume = added_weight / density
+                else:  # volume
+                    added_volume = amount_value
+                    added_weight = added_volume * density
+                
+                # 4. Рассчитать конечные значения
+                final_volume = current_volume + added_volume
+                final_weight = current_weight + added_weight
+                
+                # 5. Проверить, не превышает ли конечный объем емкость резервуара
+                if final_volume > tank.capacity_liters:
+                    messages.error(request, f"Невозможно добавить {added_volume:.2f} л: превысит емкость резервуара ({tank.capacity_liters:.2f} л)")
+                    return render(request, 'calibration/adding.html', {
+                        'tanks': tanks,
+                        'products': products
+                    })
+                
+                # 6. Преобразовать конечный объем в высоту
+                final_height = tank.volume_to_height(final_volume)
+                
+                # 7. Рассчитать процент заполнения
+                fill_percentage = (final_volume / tank.capacity_liters) * 100
+                
+                # 8. Определить метод интерполяции
+                calibration_points_count = tank.calibrations.count()
+                interpolation_method = 'spline' if calibration_points_count >= 4 else 'linear'
+                
+                # 9. Сохранить расчет в базе данных
+                calculation = AddingCalculation.objects.create(
+                    tank=tank,
+                    product=product,
+                    current_height_cm=current_height,
+                    density_kg_per_liter=density,
+                    amount_type=amount_type,
+                    amount_value=amount_value,
+                    current_volume_liters=current_volume,
+                    current_weight_kg=current_weight,
+                    added_volume_liters=added_volume,
+                    added_weight_kg=added_weight,
+                    final_volume_liters=final_volume,
+                    final_weight_kg=final_weight,
+                    final_height_cm=final_height,
+                    fill_percentage=fill_percentage,
+                    interpolation_method=interpolation_method
+                )
+                
+                # 10. Подготовить результат для отображения
+                result = {
+                    'tank_name': tank.name,
+                    'product_name': product.name,
+                    'current_height': current_height,
+                    'density': density,
+                    'amount_type': amount_type,
+                    'amount_value': amount_value,
+                    'current_volume': current_volume,
+                    'current_weight': current_weight,
+                    'added_volume': added_volume,
+                    'added_weight': added_weight,
+                    'final_volume': final_volume,
+                    'final_weight': final_weight,
+                    'final_height': final_height,
+                    'fill_percentage': fill_percentage,
+                    'interpolation_method': interpolation_method
+                }
+                
+                messages.success(request, "Расчет выполнен успешно!")
+                
+                return render(request, 'calibration/adding.html', {
+                    'tanks': tanks,
+                    'products': products,
+                    'result': result
+                })
+                
+            except Exception as e:
+                logger.error(f"Ошибка расчета: {str(e)}")
+                messages.error(request, f"Ошибка при выполнении расчета: {str(e)}")
+                return render(request, 'calibration/adding.html', {
+                    'tanks': tanks,
+                    'products': products
+                })
+        
+        except Exception as e:
+            logger.error(f"Общая ошибка: {str(e)}")
+            messages.error(request, "Произошла ошибка при обработке запроса.")
+            return render(request, 'calibration/adding.html', {
+                'tanks': tanks,
+                'products': products
+            })
+    
+    return render(request, 'calibration/adding.html', {
+        'tanks': tanks,
+        'products': products
+    })
+
+
+def calculator_selector(request):
+    """Страница выбора калькулятора"""
+    return render(request, 'calibration/calculator_selector.html')
