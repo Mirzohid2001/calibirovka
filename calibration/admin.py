@@ -2,6 +2,13 @@ from django.contrib import admin
 from .models import Tank, Product, CalibrationPoint, TransferCalculation, VolumeWeightCalculation, AddingCalculation
 
 
+class CalibrationPointInline(admin.TabularInline):
+    model = CalibrationPoint
+    extra = 5
+    fields = ('height_cm', 'volume_liters')
+    ordering = ('height_cm',)
+
+
 @admin.register(Tank)
 class TankAdmin(admin.ModelAdmin):
     list_display = ['name', 'capacity_liters', 'height_cm', 'description', 'created_at']
@@ -20,6 +27,8 @@ class TankAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    inlines = [CalibrationPointInline]
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('calibrations')
