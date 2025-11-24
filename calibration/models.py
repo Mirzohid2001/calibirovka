@@ -440,3 +440,61 @@ class AddingCalculation(models.Model):
     @property
     def density(self):
         return self.density_kg_per_liter
+
+
+class DensityTemperatureCalculation(models.Model):
+    """Расчет корректировки плотности по температуре"""
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Продукт"
+    )
+    reference_density_kg_m3 = models.FloatField(
+        validators=[MinValueValidator(100)],
+        verbose_name="Фактическая плотность (кг/м³)",
+        help_text="Измеренная плотность при текущей температуре"
+    )
+    reference_temperature_c = models.FloatField(
+        verbose_name="Текущая температура (°C)"
+    )
+    target_temperature_c = models.FloatField(
+        verbose_name="Целевая температура (°C)"
+    )
+    thermal_expansion_coefficient = models.FloatField(
+        validators=[MinValueValidator(0)],
+        default=0.00065,
+        verbose_name="Коэффициент объемного расширения (1/°C)",
+        help_text="Типовое значение для нефтепродуктов — 0.00065"
+    )
+    corrected_density_kg_m3 = models.FloatField(
+        verbose_name="Плотность при целевой температуре (кг/м³)",
+        default=0.0
+    )
+    density_difference_kg_m3 = models.FloatField(
+        verbose_name="Изменение плотности (кг/м³)",
+        default=0.0
+    )
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Примечания"
+    )
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Время расчета"
+    )
+
+    class Meta:
+        verbose_name = "Расчет плотности по температуре"
+        verbose_name_plural = "Расчеты плотности по температуре"
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        product = self.product.name if self.product else "Не указан"
+        return f"{product} ({self.timestamp.strftime('%d.%m.%Y %H:%M')})"
+
+    @property
+    def product_name(self):
+        return self.product.name if self.product else "—"

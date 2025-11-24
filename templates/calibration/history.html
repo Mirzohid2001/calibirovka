@@ -51,6 +51,10 @@
                                             <span class="badge bg-info">
                                                 <i class="bi bi-plus-circle me-1"></i>Добавление
                                             </span>
+                                        {% elif calc.type == 'density' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-thermometer me-1"></i>Плотность
+                                            </span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -278,7 +282,69 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                {% elif calc.type == 'density' %}
+                                                    <h6 class="mb-3">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        Корректировка плотности по температуре
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-warning">
+                                                                    <h6 class="mb-0">Входные данные</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-droplet me-1"></i>Продукт:</td>
+                                                                            <td><strong>{{ calc.object.product_name }}</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-thermometer me-1"></i>Фактическая температура:</td>
+                                                                            <td><strong>{{ calc.object.reference_temperature_c|floatformat:2 }} °C</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-thermometer-half me-1"></i>Целевая температура:</td>
+                                                                            <td><strong>{{ calc.object.target_temperature_c|floatformat:2 }} °C</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-speedometer me-1"></i>Фактическая плотность:</td>
+                                                                            <td><strong>{{ calc.object.reference_density_kg_m3|floatformat:2 }} кг/м³</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-diagram-3 me-1"></i>Коэффициент расширения:</td>
+                                                                            <td><strong>{{ calc.object.thermal_expansion_coefficient|floatformat:6 }}</strong></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-success text-white">
+                                                                    <h6 class="mb-0">Результаты</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-speedometer2 me-1"></i>Плотность при целевой температуре:</td>
+                                                                            <td><strong>{{ calc.object.corrected_density_kg_m3|floatformat:2 }} кг/м³</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-arrow-left-right me-1"></i>Изменение плотности:</td>
+                                                                            <td><strong>{{ calc.object.density_difference_kg_m3|floatformat:2 }} кг/м³</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-sticky me-1"></i>Примечание:</td>
+                                                                            <td><strong>{% if calc.object.notes %}{{ calc.object.notes }}{% else %}—{% endif %}</strong></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 {% endif %}
+                                                {% if calc.type != 'density' %}
                                                 <div class="mt-3">
                                                     {% if calc.object.notes %}
                                                     <div class="alert alert-info">
@@ -298,6 +364,7 @@
                                                         {% endif %}
                                                     </div>
                                                 </div>
+                                                {% endif %}
                                             </div>
                                         </div>
                                     </td>

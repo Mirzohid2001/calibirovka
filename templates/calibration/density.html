@@ -1,0 +1,147 @@
+{% extends 'calibration/base.html' %}
+
+{% block title %}Калькулятор плотности{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-warning">
+                <h3 class="card-title mb-0 text-dark">
+                    <i class="bi bi-thermometer me-2"></i>
+                    Калькулятор плотности нефтепродуктов
+                </h3>
+                <p class="mb-0 text-dark-50 small">
+                    Пересчет фактической плотности (кг/м³) к другой температуре. Коэффициенты расширения берутся из таблицы ГОСТ Р 8.595-2004 (<a href="http://www.dobmaster.ru/73.html" target="_blank">dobmaster.ru</a>).
+                </p>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label" for="reference_density">
+                            <i class="bi bi-speedometer me-1"></i>
+                            Фактическая плотность (кг/м³):
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="reference_density"
+                               name="reference_density"
+                               placeholder="Например: 850"
+                               value="{{ request.POST.reference_density }}"
+                               required>
+                        <small class="text-muted">Можно вводить значение в кг/м³ или кг/л (0.7–1.0) — система конвертирует автоматически.</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="reference_temperature">
+                                    <i class="bi bi-thermometer-high me-1"></i>
+                                    Текущая температура (°C):
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="reference_temperature"
+                                       name="reference_temperature"
+                                       placeholder="Например: 35"
+                                       value="{{ request.POST.reference_temperature }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="target_temperature">
+                                    <i class="bi bi-thermometer-snow me-1"></i>
+                                    Целевая температура (°C):
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="target_temperature"
+                                       name="target_temperature"
+                                       placeholder="Например: 15"
+                                       value="{{ request.POST.target_temperature }}"
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Коэффициент объемного расширения подбирается автоматически по фактической плотности согласно ГОСТ Р 8.595-2004 (таблица dobmaster.ru/73.html).
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="notes">
+                            <i class="bi bi-journal-text me-1"></i>
+                            Примечание (необязательно):
+                        </label>
+                        <textarea class="form-control"
+                                  id="notes"
+                                  name="notes"
+                                  rows="2"
+                                  placeholder="Дополнительная информация о замере">{{ request.POST.notes }}</textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning text-dark btn-lg">
+                            <i class="bi bi-calculator me-2"></i>
+                            Пересчитать плотность
+                        </button>
+                    </div>
+                </form>
+
+                {% if result %}
+                <div class="mt-4">
+                    <div class="card bg-light border-0">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-check-circle-fill text-warning me-2"></i>
+                                Результаты пересчета
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-speedometer me-1"></i>Фактическая плотность:</h6>
+                                    <p>{{ result.reference_density|floatformat:2 }} кг/м³</p>
+
+                                    <h6><i class="bi bi-thermometer me-1"></i>Фактическая температура:</h6>
+                                    <p>{{ result.reference_temperature|floatformat:2 }} °C</p>
+                                    
+                                    <h6><i class="bi bi-diagram-3 me-1"></i>Температурная поправка:</h6>
+                                    <p>{{ result.temperature_correction|floatformat:2 }} кг/м³ на °C</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-thermometer-half me-1"></i>Целевая температура:</h6>
+                                    <p>{{ result.target_temperature|floatformat:2 }} °C</p>
+
+                                    <h6><i class="bi bi-speedometer2 me-1"></i>Плотность при целевой температуре:</h6>
+                                    <p class="h4 text-success">{{ result.corrected_density|floatformat:2 }} кг/м³</p>
+
+                                    <h6><i class="bi bi-arrow-left-right me-1"></i>Изменение:</h6>
+                                    <p>{{ result.density_difference|floatformat:2 }} кг/м³</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <p class="small mb-0">
+                                <strong>Примечание:</strong> Расчет выполнен по формуле 
+                                ρ₂ = ρ₁ − Δρ · (T₂ − T₁), где Δρ = {{ result.temperature_correction|floatformat:2 }} кг/м³·°C⁻¹.
+                            </p>
+                            {% if result.notes %}
+                            <p class="small text-muted mb-0"><strong>Комментарий:</strong> {{ result.notes }}</p>
+                            {% endif %}
+                            {% if result.density_note %}
+                            <p class="small text-muted mb-0"><strong>Примечание по плотности:</strong> {{ result.density_note }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

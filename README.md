@@ -9,6 +9,10 @@ A Django web application for calculating final liquid height in reservoirs after
 - **Product Selection**: Select products (oil, gasoline, diesel, etc.)
 - **Density Input**: Enter current density (varies with temperature)
 - **Transfer Calculation**: Calculate final height after transferring a specific weight
+- **Volume/Weight Calculator**: Get current volume and mass from height and density
+- **Additive Calculator**: Predict final level after adding a given amount
+- **Density Calculator**: Convert actual density to any target temperature (kg/m³) with automatic thermal coefficient lookup (ГОСТ Р 8.595-2004 / dobmaster.ru)
+- **Quick Density Calculator**: Instant density conversion using default thermal coefficient
 - **Linear Interpolation**: Accurate height-to-volume conversions using calibration data
 - **Calculation History**: Track and review past calculations with density used
 
@@ -59,7 +63,12 @@ A Django web application for calculating final liquid height in reservoirs after
    ```
 
 6. **Access the application**
-   - Main Calculator: http://127.0.0.1:8000/
+   - Calculator Selector: http://127.0.0.1:8000/
+   - Transfer Calculator: http://127.0.0.1:8000/deduction/
+   - Volume/Weight Calculator: http://127.0.0.1:8000/volume-weight/
+   - Adding Calculator: http://127.0.0.1:8000/adding/
+    - Density Calculator: http://127.0.0.1:8000/density/
+   - Quick Density Calculator: http://127.0.0.1:8000/density-quick/
    - Admin Interface: http://127.0.0.1:8000/admin/
    - Admin credentials: username=`admin`, password=`admin123`
 
@@ -170,6 +179,7 @@ calibration/
 ## API Endpoints
 
 - `GET /` - Main calculator page
+- `GET /density/` - Density calculator (kg/m³ → target °C)
 - `POST /calculate/` - AJAX endpoint for calculations (includes density parameter)
 - `GET /history/` - Calculation history page
 - `GET /admin/` - Django admin interface

@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import Tank, Product, CalibrationPoint, TransferCalculation, VolumeWeightCalculation, AddingCalculation
+from .models import (
+    Tank,
+    Product,
+    CalibrationPoint,
+    TransferCalculation,
+    VolumeWeightCalculation,
+    AddingCalculation,
+    DensityTemperatureCalculation,
+)
 
 
 class CalibrationPointInline(admin.TabularInline):
@@ -277,6 +285,58 @@ class AddingCalculationAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # Расчеты создаются только через интерфейс приложения
         return False
+
+
+@admin.register(DensityTemperatureCalculation)
+class DensityTemperatureCalculationAdmin(admin.ModelAdmin):
+    list_display = [
+        'product_name',
+        'reference_density_kg_m3',
+        'reference_temperature_c',
+        'target_temperature_c',
+        'corrected_density_kg_m3',
+        'timestamp',
+    ]
+    list_filter = [
+        'product',
+        'timestamp',
+    ]
+    search_fields = [
+        'product__name',
+    ]
+    readonly_fields = [
+        'corrected_density_kg_m3',
+        'density_difference_kg_m3',
+        'timestamp',
+    ]
+    fieldsets = (
+        ('Входные данные', {
+            'fields': (
+                'product',
+                'reference_density_kg_m3',
+                'reference_temperature_c',
+                'target_temperature_c',
+                'thermal_expansion_coefficient',
+            )
+        }),
+        ('Результаты расчета', {
+            'fields': (
+                'corrected_density_kg_m3',
+                'density_difference_kg_m3',
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Метаданные', {
+            'fields': (
+                'notes',
+                'timestamp',
+            ),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('product')
 
 
 # Настройка заголовков админки

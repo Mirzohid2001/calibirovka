@@ -20,7 +20,7 @@
 
             <div class="row g-4">
                 <!-- Калькулятор откачки -->
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body text-center p-4">
                             <div class="mb-3">
@@ -44,7 +44,7 @@
                 </div>
 
                 <!-- Калькулятор объема и веса -->
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body text-center p-4">
                             <div class="mb-3">
@@ -68,7 +68,7 @@
                 </div>
 
                 <!-- Калькулятор добавления -->
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-3">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body text-center p-4">
                             <div class="mb-3">
@@ -90,6 +90,54 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Калькулятор плотности -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="bi bi-thermometer text-warning" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Калькулятор плотности</h4>
+                            <p class="card-text text-muted">
+                                Пересчитывает плотность нефтепродукта к целевой температуре
+                            </p>
+                            <ul class="list-unstyled text-start small">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Ввод фактической плотности</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Указание текущей температуры</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Расчет плотности для новой температуры</li>
+                            </ul>
+                            <a href="{% url 'calibration:density_calculator' %}" class="btn btn-warning btn-lg w-100 text-dark">
+                                <i class="bi bi-thermometer me-2"></i>
+                                Открыть калькулятор
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Быстрый калькулятор плотности -->
+                <!-- <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="bi bi-lightning-charge text-secondary" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Быстрый пересчет плотности</h4>
+                            <p class="card-text text-muted">
+                                Моментальный расчет плотности по фактическому значению и двум температурам
+                            </p>
+                            <ul class="list-unstyled text-start small">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Фактическая плотность</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Текущая температура</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Целевая температура</li>
+                            </ul>
+                            <a href="{% url 'calibration:density_quick_calculator' %}" class="btn btn-secondary btn-lg w-100">
+                                <i class="bi bi-lightning-charge me-2"></i>
+                                Открыть калькулятор
+                            </a>
+                        </div>
+                    </div>
+                </div> -->
             </div>
 
             <!-- Дополнительная информация -->

@@ -4,11 +4,99 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-from .models import Tank, Product, TransferCalculation, VolumeWeightCalculation, AddingCalculation
+from .models import (
+    Tank,
+    Product,
+    TransferCalculation,
+    VolumeWeightCalculation,
+    AddingCalculation,
+    DensityTemperatureCalculation,
+)
 import json
 import logging
 
 logger = logging.getLogger(__name__)
+
+TEMPERATURE_CORRECTION_TABLE = [
+    # Диапазоны плотности при 20°C (г/см³) и средние температурные поправки на 1°C (г/см³)
+    (0.6500, 0.6599, 0.000962),
+    (0.6600, 0.6699, 0.000949),
+    (0.6700, 0.6799, 0.000936),
+    (0.6800, 0.6899, 0.000925),
+    (0.6900, 0.6999, 0.000910),
+    (0.7000, 0.7099, 0.000897),
+    (0.7100, 0.7199, 0.000884),
+    (0.7200, 0.7299, 0.000870),
+    (0.7300, 0.7399, 0.000857),
+    (0.7400, 0.7499, 0.000844),
+    (0.7500, 0.7599, 0.000831),
+    (0.7600, 0.7699, 0.000818),
+    (0.7700, 0.7799, 0.000805),
+    (0.7800, 0.7899, 0.000792),
+    (0.7900, 0.7999, 0.000778),
+    (0.8000, 0.8099, 0.000765),
+    (0.8100, 0.8199, 0.000752),
+    (0.8200, 0.8299, 0.000738),
+    (0.8300, 0.8399, 0.000725),
+    (0.8400, 0.8499, 0.000712),
+    (0.8500, 0.8599, 0.000699),
+    (0.8600, 0.8699, 0.000686),
+    (0.8700, 0.8799, 0.000673),
+    (0.8800, 0.8899, 0.000660),
+    (0.8900, 0.8999, 0.000647),
+    (0.9000, 0.9099, 0.000633),
+    (0.9100, 0.9199, 0.000620),
+    (0.9200, 0.9299, 0.000607),
+    (0.9300, 0.9399, 0.000594),
+    (0.9400, 0.9499, 0.000581),
+    (0.9500, 0.9599, 0.000567),
+    (0.9600, 0.9699, 0.000554),
+    (0.9700, 0.9799, 0.000541),
+    (0.9800, 0.9899, 0.000528),
+    (0.9900, 1.0000, 0.000515),
+]
+DEFAULT_TEMPERATURE_CORRECTION = 0.00065  # г/см³ на °C
+
+
+def get_temperature_correction(density_kg_m3):
+    """
+    Возвращает температурную поправку (кг/м³ на °C) согласно таблице dobmaster.ru/73.html.
+    В таблице используются значения плотности и поправки в г/см³, поэтому выполняется конвертация.
+    """
+    try:
+        density_g_cm3 = float(density_kg_m3) / 1000.0
+    except (TypeError, ValueError):
+        density_g_cm3 = None
+
+    correction_g = DEFAULT_TEMPERATURE_CORRECTION
+
+    if density_g_cm3 is not None:
+        for lower, upper, correction in TEMPERATURE_CORRECTION_TABLE:
+            if lower <= density_g_cm3 <= upper:
+                correction_g = correction
+                break
+
+    # Переводим в кг/м³ (1 г/см³ = 1000 кг/м³)
+    return correction_g * 1000.0
+
+
+def normalize_density_input(value):
+    """
+    Приводит плотность к кг/м³, если пользователь ввел значение в кг/л (0.x-1.x).
+    Возвращает кортеж (плотность_кг_м3, примечание).
+    """
+    if value <= 0:
+        raise ValueError("Плотность должна быть положительным числом.")
+    
+    if value < 10:  # предполагаем, что значение введено в кг/л
+        converted = value * 1000
+        note = (
+            f"Введенная плотность {value:g} была интерпретирована как кг/л и "
+            f"преобразована в {converted:.1f} кг/м³."
+        )
+        return converted, note
+    
+    return value, None
 
 
 def home(request):
@@ -174,6 +262,7 @@ def history(request):
     transfer_calculations = TransferCalculation.objects.all().order_by('-timestamp')
     volume_weight_calculations = VolumeWeightCalculation.objects.all().order_by('-timestamp')
     adding_calculations = AddingCalculation.objects.all().order_by('-timestamp')
+    density_calculations = DensityTemperatureCalculation.objects.all().order_by('-timestamp')
     
     # Объединить все расчеты и отсортировать по времени
     all_calculations = []
@@ -206,6 +295,16 @@ def history(request):
             'tank_name': calc.tank_name,
             'product_name': calc.product_name,
             'description': f"Добавление: {calc.current_height_cm:.2f} см + {calc.amount_value:.2f} {'кг' if calc.amount_type == 'weight' else 'л'} → {calc.final_height_cm:.2f} см"
+        })
+    
+    for calc in density_calculations:
+        all_calculations.append({
+            'type': 'density',
+            'object': calc,
+            'timestamp': calc.timestamp,
+            'tank_name': '—',
+            'product_name': calc.product_name,
+            'description': f"Плотность: {calc.reference_density_kg_m3:.1f} кг/м³ при {calc.reference_temperature_c:.1f}°C → {calc.corrected_density_kg_m3:.1f} кг/м³"
         })
     
     # Сортировка по времени (новые сначала)
@@ -744,6 +843,136 @@ def adding_calculator(request):
     return render(request, 'calibration/adding.html', {
         'tanks': tanks,
         'products': products
+    })
+
+
+def density_calculator(request):
+    """Калькулятор корректировки плотности по температуре"""
+    if request.method == 'POST':
+        try:
+            reference_density_str = request.POST.get('reference_density', '').replace(',', '.')
+            reference_temperature_str = request.POST.get('reference_temperature', '').replace(',', '.')
+            target_temperature_str = request.POST.get('target_temperature', '').replace(',', '.')
+            notes = request.POST.get('notes', '').strip()
+
+            if not all([reference_density_str, reference_temperature_str, target_temperature_str]):
+                messages.error(request, "Пожалуйста, заполните все обязательные поля.")
+                return render(request, 'calibration/density.html', {
+                })
+
+            try:
+                reference_density_input = float(reference_density_str)
+                reference_temperature = float(reference_temperature_str)
+                target_temperature = float(target_temperature_str)
+            except ValueError:
+                messages.error(request, "Пожалуйста, введите корректные числовые значения.")
+                return render(request, 'calibration/density.html', {
+                })
+            
+            if reference_density_input <= 0:
+                messages.error(request, "Плотность должна быть положительным числом.")
+                return render(request, 'calibration/density.html', {
+                })
+
+            reference_density, density_note = normalize_density_input(reference_density_input)
+            temperature_correction = get_temperature_correction(reference_density)
+
+            delta_t = target_temperature - reference_temperature
+            corrected_density = reference_density - temperature_correction * delta_t
+            density_diff = corrected_density - reference_density
+
+            calculation = DensityTemperatureCalculation.objects.create(
+                product=None,
+                reference_density_kg_m3=reference_density,
+                reference_temperature_c=reference_temperature,
+                target_temperature_c=target_temperature,
+                thermal_expansion_coefficient=temperature_correction,
+                corrected_density_kg_m3=corrected_density,
+                density_difference_kg_m3=density_diff,
+                notes=notes or None
+            )
+
+            result = {
+                'reference_density': reference_density,
+                'reference_temperature': reference_temperature,
+                'target_temperature': target_temperature,
+                'temperature_correction': temperature_correction,
+                'corrected_density': corrected_density,
+                'density_difference': density_diff,
+                'notes': notes,
+                'density_note': density_note,
+            }
+
+            messages.success(request, "Плотность успешно пересчитана!")
+
+            return render(request, 'calibration/density.html', {
+                'result': result
+            })
+
+        except Exception as e:
+            logger.error(f"Ошибка расчета плотности: {str(e)}")
+            messages.error(request, "Произошла ошибка при выполнении расчета.")
+
+    return render(request, 'calibration/density.html', {
+    })
+
+
+def density_quick_calculator(request):
+    """
+    Упрощенный калькулятор пересчета плотности, требующий только фактическую плотность,
+    текущую и целевую температуры. Использует типичный коэффициент 0.00065 1/°C.
+    """
+    result = None
+    
+    if request.method == 'POST':
+        actual_density_str = request.POST.get('actual_density', '').replace(',', '.')
+        actual_temp_str = request.POST.get('actual_temperature', '').replace(',', '.')
+        desired_temp_str = request.POST.get('desired_temperature', '').replace(',', '.')
+        
+        if not all([actual_density_str, actual_temp_str, desired_temp_str]):
+            messages.error(request, "Пожалуйста, заполните все поля формы.")
+        else:
+            try:
+                actual_density_input = float(actual_density_str)
+                actual_temp = float(actual_temp_str)
+                desired_temp = float(desired_temp_str)
+            except ValueError:
+                messages.error(request, "Пожалуйста, введите корректные числовые значения.")
+            else:
+                if actual_density_input <= 0:
+                    messages.error(request, "Плотность должна быть положительным числом.")
+                else:
+                    actual_density, density_note = normalize_density_input(actual_density_input)
+                    temperature_correction = get_temperature_correction(actual_density)
+
+                    delta_t = desired_temp - actual_temp
+                    corrected_density = actual_density - temperature_correction * delta_t
+                    density_diff = corrected_density - actual_density
+                    
+                    DensityTemperatureCalculation.objects.create(
+                        product=None,
+                        reference_density_kg_m3=actual_density,
+                        reference_temperature_c=actual_temp,
+                        target_temperature_c=desired_temp,
+                        thermal_expansion_coefficient=temperature_correction,
+                        corrected_density_kg_m3=corrected_density,
+                        density_difference_kg_m3=density_diff,
+                        notes="Быстрый калькулятор плотности"
+                    )
+                    
+                    result = {
+                        'actual_density': actual_density,
+                        'actual_temperature': actual_temp,
+                        'desired_temperature': desired_temp,
+                        'corrected_density': corrected_density,
+                        'density_difference': density_diff,
+                        'temperature_correction': temperature_correction,
+                        'density_note': density_note,
+                    }
+                    messages.success(request, "Плотность успешно пересчитана.")
+    
+    return render(request, 'calibration/density_quick.html', {
+        'result': result
     })
 
 
