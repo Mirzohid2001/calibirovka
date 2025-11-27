@@ -1,0 +1,63 @@
+{% extends 'calibration/base.html' %}
+
+{% load static %}
+
+{% block title %}Сравнение вариантов - Калькуляторы резервуаров{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <!-- Sarlavha -->
+            <div class="text-center mb-4">
+                <h1 class="display-5 text-info">
+                    <i class="bi bi-arrow-left-right me-3"></i>
+                    Сравнение вариантов
+                </h1>
+                <p class="lead text-muted">
+                    Сравните выбранные варианты бок о бок
+                </p>
+            </div>
+
+            <!-- Сообщение об ошибке -->
+            <div id="error-message" class="alert alert-danger" style="display: none;">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span id="error-text">Произошла ошибка</span>
+            </div>
+
+            <!-- Таблица сравнения -->
+            <div id="compare-container" style="display: none;">
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="card-title mb-0">
+                            <i class="bi bi-table me-2"></i>
+                            Таблица сравнения
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="compare-table" class="table table-bordered table-hover">
+                                <thead id="compare-thead"></thead>
+                                <tbody id="compare-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orqaga qaytish -->
+            <div class="text-center mt-4">
+                <a href="{% url 'calibration:gasoline_blend_calculator' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Вернуться назад
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/compare_variants.js' %}"></script>
+{% endblock %}
+

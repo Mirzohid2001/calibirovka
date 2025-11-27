@@ -1,0 +1,218 @@
+{% extends 'calibration/base.html' %}
+
+{% load static %}
+
+{% block title %}Выбор октана и расчет - Калькуляторы резервуаров{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <!-- Sarlavha -->
+            <div class="text-center mb-5">
+                <div class="hero-section">
+                    <h1 class="display-4 fw-bold text-gradient-danger mb-3">
+                        <i class="bi bi-fuel-pump me-3"></i>
+                        Выбор октана и расчет
+                    </h1>
+                    <p class="lead text-muted fs-5">
+                        Выберите целевое октановое число и получите варианты смешивания по ГОСТ стандартам
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tanlangan productlar ko'rsatish -->
+            <div id="selected-products-info" class="card shadow-lg mb-4 border-0 gasoline-card" style="display: none;">
+                <div class="card-header bg-gradient-info text-white py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-list-check me-2"></i>
+                        Выбранные продукты
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div id="products-summary"></div>
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'calibration:product_selection' %}" class="btn btn-primary btn-lg px-4">
+                            <i class="bi bi-pencil me-2"></i>
+                            Изменить продукты
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Oktan tanlash va hisoblash -->
+            <div class="card shadow-lg mb-4 border-0 gasoline-card">
+                <div class="card-header bg-gradient-danger text-white py-4">
+                    <h4 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-sliders me-2"></i>
+                        Выберите целевое октановое число
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Oktan soni кнопкаlar -->
+                    <div class="row g-2 g-md-3 mb-4">
+                        <div class="col-6 col-sm-4 col-md-4 col-lg-2">
+                            <button type="button" class="btn btn-outline-danger w-100 btn-lg octane-btn octane-btn-style" 
+                                    data-target-octane="80">
+                                <span class="octane-number">AI-80</span>
+                            </button>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-4 col-lg-2">
+                            <button type="button" class="btn btn-outline-danger w-100 btn-lg octane-btn octane-btn-style" 
+                                    data-target-octane="92">
+                                <span class="octane-number">AI-92</span>
+                            </button>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-4 col-lg-2">
+                            <button type="button" class="btn btn-outline-danger w-100 btn-lg octane-btn octane-btn-style" 
+                                    data-target-octane="95">
+                                <span class="octane-number">AI-95</span>
+                            </button>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-4 col-lg-2">
+                            <button type="button" class="btn btn-outline-danger w-100 btn-lg octane-btn octane-btn-style" 
+                                    data-target-octane="98">
+                                <span class="octane-number">AI-98</span>
+                            </button>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-4 col-lg-2">
+                            <button type="button" class="btn btn-outline-danger w-100 btn-lg octane-btn octane-btn-style" 
+                                    data-target-octane="100">
+                                <span class="octane-number">AI-100</span>
+                            </button>
+                        </div>
+                        <div class="col-6 col-sm-4 col-md-4 col-lg-2">
+                            <button type="button" class="btn btn-secondary w-100 btn-lg custom-octane-btn-style" 
+                                    id="custom-octane-btn">
+                                <i class="bi bi-pencil me-1"></i>
+                                <span class="d-none d-sm-inline">Другое</span>
+                                <span class="d-sm-none">...</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Custom oktan input -->
+                    <div class="mb-4 custom-input-section" id="custom-octane-input" style="display: none;">
+                        <label for="custom-octane" class="form-label fw-bold">
+                            <i class="bi bi-123 me-2 text-danger"></i>
+                            Октановое число:
+                        </label>
+                        <input type="number" 
+                               class="form-control form-control-lg" 
+                               id="custom-octane" 
+                               placeholder="Например: 93" 
+                               min="0" 
+                               max="200" 
+                               step="0.1">
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Введите произвольное октановое число
+                        </small>
+                    </div>
+
+                    <!-- Umumiy og'irlik (ixtiyoriy) -->
+                    <div class="mb-4">
+                        <label for="total-weight" class="form-label fw-bold">
+                            <i class="bi bi-scale me-2 text-primary"></i>
+                            Общий вес (кг) - необязательно:
+                        </label>
+                        <input type="number" 
+                               class="form-control form-control-lg" 
+                               id="total-weight" 
+                               placeholder="Например: 1000" 
+                               min="0" 
+                               step="0.01">
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Если указано, для каждого варианта будет показан вес и общая цена</small>
+                        </div>
+                    </div>
+
+                    <!-- Hisobla кнопкаsi -->
+                    <div class="text-center mt-4">
+                        <button type="button" class="btn btn-danger btn-lg px-5 py-3 calculate-btn-main" id="calculate-btn">
+                            <i class="bi bi-calculator me-2"></i>
+                            <span class="fw-bold">Рассчитать</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loading-indicator" class="text-center mb-4 loading-section" style="display: none;">
+                <div class="spinner-border text-danger spinner-lg" role="status">
+                    <span class="visually-hidden">Вычисляется...</span>
+                </div>
+                <p class="mt-4 text-muted fs-5">
+                    <i class="bi bi-hourglass-split me-2"></i>
+                    Варианты вычисляются...
+                </p>
+                <div class="progress mt-3" style="height: 6px; max-width: 300px; margin: 0 auto;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" 
+                         role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- Xatolik xabari -->
+            <div id="error-message" class="alert alert-danger alert-dismissible fade show" style="display: none;" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span id="error-text"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Natijalar -->
+            <div id="results-container" style="display: none;">
+                <div class="card shadow-lg border-0 gasoline-results-card">
+                    <div class="card-header bg-gradient-success text-white d-flex justify-content-between align-items-center py-4">
+                        <h4 class="card-title mb-0 fw-bold">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span id="results-header">Результаты</span>
+                        </h4>
+                        <div class="d-flex flex-column flex-sm-row gap-2 mt-2 mt-sm-0">
+                            <button type="button" id="compare-btn" class="btn btn-info btn-sm fw-bold" style="display: none;">
+                                <i class="bi bi-arrow-left-right me-2"></i>
+                                <span class="d-none d-md-inline">Сравнить </span>(<span id="selected-count">0</span>)
+                            </button>
+                            <button type="button" id="export-excel-btn" class="btn btn-light btn-sm fw-bold">
+                                <i class="bi bi-file-earmark-excel me-2"></i>
+                                <span class="d-none d-md-inline">Экспорт в Excel</span>
+                                <span class="d-md-none">Excel</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="variants-list"></div>
+                        
+                        <!-- Grafiklar -->
+                        <div id="charts-container" style="display: none;" class="mt-4">
+                            <hr>
+                            <h5 class="mb-3">
+                                <i class="bi bi-graph-up me-2"></i>
+                                Графики цены и октана
+                            </h5>
+                            <div class="row">
+                                <div class="col-12">
+                                    <canvas id="price-octane-chart" style="max-height: 400px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js kutubxonasi -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // URL konstantalarini global o'zgaruvchilarga yozish
+    const CALCULATE_URL = '{% url "calibration:calculate_gasoline_blend" %}';
+    const PRODUCT_SELECTION_URL = '{% url "calibration:product_selection" %}';
+    const EXPORT_EXCEL_URL = '{% url "calibration:export_blend_variants_excel" %}';
+</script>
+<script src="{% static 'js/gasoline_blend_calculator.js' %}"></script>
+{% endblock %}
+

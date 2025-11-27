@@ -1,0 +1,241 @@
+{% extends 'calibration/base.html' %}
+
+{% load static %}
+
+{% block title %}Сохраненные конфигурации - Калькуляторы резервуаров{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <!-- Sarlavha -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                <div>
+                    <h1 class="display-5 text-primary">
+                        <i class="bi bi-folder-fill me-3"></i>
+                        Сохраненные конфигурации
+                    </h1>
+                    <p class="lead text-muted">
+                        Сохраненные конфигурации продуктов (с октановым числом и ценой)
+                    </p>
+                </div>
+                <div class="mt-2">
+                    <a href="{% url 'calibration:product_selection' %}" class="btn btn-danger">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Вернуться к выбору продуктов
+                    </a>
+                </div>
+            </div>
+
+            <!-- Konfiguratsiyalar ro'yxati -->
+            {% if configs_with_products %}
+                <div class="row g-4">
+                    {% for item in configs_with_products %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm border">
+                            <div class="card-header bg-primary text-white">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1">
+                                            <i class="bi bi-folder me-2"></i>
+                                            {{ item.config.name }}
+                                        </h5>
+                                        <small class="text-white-50">
+                                            <i class="bi bi-clock me-1"></i>
+                                            {{ item.config.created_at|date:"d.m.Y H:i" }}
+                                        </small>
+                                    </div>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-light text-danger delete-config-btn" 
+                                            data-config-id="{{ item.config.id }}"
+                                            title="Удалить">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-box-seam me-1"></i>
+                                            {{ item.products|length }} продуктов
+                                    </span>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="font-size: 0.85rem;">Продукт</th>
+                                                <th style="font-size: 0.85rem;" class="text-center">Октан</th>
+                                                <th style="font-size: 0.85rem;" class="text-end">Цена</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for p_info in item.products %}
+                                            <tr>
+                                                <td>
+                                                    <small><strong>{{ p_info.product.name }}</strong></small>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-secondary">{{ p_info.octane }}</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-success fw-bold">{{ p_info.price|floatformat:0 }} сум/кг</small>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {% if item.config.description %}
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        {{ item.config.description|truncatewords:15 }}
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer bg-light">
+                                <div class="d-grid">
+                                    <button type="button" 
+                                            class="btn btn-primary load-config-btn" 
+                                            data-config-id="{{ item.config.id }}">
+                                        <i class="bi bi-download me-2"></i>
+                                        Загрузить и использовать
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination (keyinchalik qo'shish mumkin) -->
+            {% else %}
+                <div class="alert alert-info text-center py-5">
+                    <i class="bi bi-info-circle me-2" style="font-size: 2rem;"></i>
+                    <h4 class="mt-3">Нет сохраненных конфигураций</h4>
+                    <p class="text-muted mb-4">
+                        Перейдите на страницу калькулятора для создания первой конфигурации
+                    </p>
+                    <a href="{% url 'calibration:product_selection' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Создать новую конфигурацию
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // CSRF token olish
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        const PRODUCT_SELECTION_URL = '{% url "calibration:product_selection" %}';
+
+        // Konfiguratsiyani yuklash
+        document.querySelectorAll('.load-config-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const configId = this.dataset.configId;
+                
+                if (!configId) {
+                    alert('Ошибка: ID конфигурации не найден');
+                    return;
+                }
+                
+                // Loading ko'rsatish
+                const originalHtml = this.innerHTML;
+                this.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Загрузка...';
+                this.disabled = true;
+                
+                // Product selection sahifasiga o'tib, konfiguratsiyani yuklash
+                const url = PRODUCT_SELECTION_URL + '?load_config=' + configId;
+                console.log('Переход на страницу:', url);
+                window.location.href = url;
+            });
+        });
+
+        // Konfiguratsiyani o'chirish
+        document.querySelectorAll('.delete-config-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Card click eventini to'xtatish
+                
+                if (!confirm('Вы подтверждаете удаление этой конфигурации?')) {
+                    return;
+                }
+                
+                const configId = this.dataset.configId;
+                const card = this.closest('.card');
+                
+                // Loading ko'rsatish
+                this.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                this.disabled = true;
+                
+                // AJAX so'rov
+                fetch(`{% url 'calibration:delete_configuration' 0 %}`.replace('0', configId), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        // Cardni yashirish animatsiyasi
+                        card.style.transition = 'opacity 0.3s';
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.remove();
+                            
+                            // Agar barcha konfiguratsiyalar o'chirilsa, bo'sh xabar ko'rsatish
+                            const remainingCards = document.querySelectorAll('.col-md-6.col-lg-4');
+                            if (remainingCards.length === 0) {
+                                location.reload();
+                            }
+                        }, 300);
+                        
+                        if (window.showNotification) {
+                            window.showNotification('Конфигурация успешно удалена', 'success');
+                        } else {
+                            alert('Конфигурация успешно удалена');
+                        }
+                    } else {
+                        alert('Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+                        this.innerHTML = '<i class="bi bi-trash"></i>';
+                        this.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ошибка сервера: ' + error.message);
+                    this.innerHTML = '<i class="bi bi-trash"></i>';
+                    this.disabled = false;
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

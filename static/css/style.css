@@ -223,6 +223,676 @@ footer {
     outline-offset: 2px;
 }
 
+/* Custom orange background for gasoline blend categories */
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+
+.border-orange {
+    border-color: #fd7e14 !important;
+}
+
+.text-orange {
+    color: #fd7e14 !important;
+}
+
+/* Gasoline blend calculator specific styles */
+.octane-btn.active {
+    background: linear-gradient(135deg, #dc3545 0%, #bb2d3b 100%) !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4) !important;
+    transform: translateY(-2px) scale(1.05);
+}
+
+.octane-btn.active:hover {
+    background: linear-gradient(135deg, #bb2d3b 0%, #a02632 100%) !important;
+    border-color: #bb2d3b !important;
+    transform: translateY(-3px) scale(1.08);
+}
+
+/* Gradient backgrounds */
+.bg-gradient-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #bb2d3b 100%) !important;
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #198754 0%, #157347 100%) !important;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
+}
+
+.text-gradient-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #bb2d3b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Gasoline card styles */
+.gasoline-card {
+    border-radius: 16px !important;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gasoline-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.gasoline-results-card {
+    border-radius: 16px !important;
+    overflow: hidden;
+    animation: slideInUp 0.6s ease-out;
+}
+
+/* Oktan button styles */
+.octane-btn-style {
+    border-radius: 12px !important;
+    border: 2px solid #dc3545 !important;
+    font-weight: 600 !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.octane-btn-style::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.octane-btn-style:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.octane-btn-style:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+}
+
+.octane-number {
+    position: relative;
+    z-index: 1;
+    font-size: 1.1rem;
+}
+
+.custom-octane-btn-style {
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease;
+}
+
+.custom-octane-btn-style:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+/* Calculate button */
+.calculate-btn-main {
+    border-radius: 12px !important;
+    font-size: 1.2rem !important;
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.calculate-btn-main::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.calculate-btn-main:hover::before {
+    width: 400px;
+    height: 400px;
+}
+
+.calculate-btn-main:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}
+
+.calculate-btn-main:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+/* Loading section */
+.loading-section {
+    padding: 3rem 0;
+}
+
+.spinner-lg {
+    width: 4rem !important;
+    height: 4rem !important;
+    border-width: 5px !important;
+}
+
+/* Hero section */
+.hero-section {
+    padding: 2rem 0;
+}
+
+/* Form controls enhancement */
+.form-control-lg {
+    border-radius: 10px !important;
+    border: 2px solid #e9ecef !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1.1rem !important;
+    transition: all 0.3s ease;
+}
+
+.form-control-lg:focus {
+    border-color: var(--danger-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15) !important;
+    transform: translateY(-2px);
+}
+
+/* Custom input section */
+.custom-input-section {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.05) 0%, rgba(187, 45, 59, 0.05) 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px dashed rgba(220, 53, 69, 0.2);
+}
+
+/* Products summary table enhancement */
+#products-summary table {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#products-summary .table thead {
+    background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
+    color: white;
+}
+
+#products-summary .table tbody tr {
+    transition: all 0.3s ease;
+}
+
+#products-summary .table tbody tr:hover {
+    background-color: rgba(13, 202, 240, 0.1);
+    transform: scale(1.01);
+}
+
+/* Variant cards enhancement */
+#variants-list .card {
+    border-radius: 12px !important;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+#variants-list .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Chart container */
+#charts-container {
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.8) 100%);
+    padding: 2rem;
+    border-radius: 12px;
+    margin-top: 2rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .octane-btn-style {
+        font-size: 0.9rem !important;
+        padding: 0.5rem !important;
+    }
+    
+    .calculate-btn-main {
+        font-size: 1rem !important;
+        padding: 0.75rem 2rem !important;
+    }
+    
+    .hero-section h1 {
+        font-size: 2rem !important;
+    }
+    
+    /* Navigation improvements */
+    .navbar-brand {
+        font-size: 1.1rem !important;
+    }
+    
+    .navbar-nav {
+        text-align: center;
+        margin-top: 1rem;
+    }
+    
+    /* Card improvements */
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    .card-header {
+        padding: 0.75rem 1rem !important;
+        font-size: 1rem !important;
+    }
+    
+    /* Table improvements - make scrollable */
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Form improvements */
+    .form-control-lg,
+    .form-select-lg {
+        font-size: 1rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    /* Button improvements */
+    .btn-lg {
+        padding: 0.75rem 1.5rem !important;
+        font-size: 1rem !important;
+    }
+    
+    /* Footer improvements */
+    footer .row {
+        text-align: center;
+    }
+    
+    footer .col-md-6 {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Display improvements */
+    .display-4 {
+        font-size: 1.75rem !important;
+    }
+    
+    .display-5 {
+        font-size: 1.5rem !important;
+    }
+    
+    /* Spacing improvements */
+    .mb-5 {
+        margin-bottom: 2rem !important;
+    }
+    
+    .mt-5 {
+        margin-top: 2rem !important;
+    }
+    
+    /* Container padding */
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    /* Results header buttons */
+    .card-header .d-flex {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .card-header .btn-sm {
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+    
+    /* Variant cards improvements */
+    #variants-list .card-body {
+        padding: 1rem !important;
+    }
+    
+    /* Chart container */
+    #charts-container {
+        padding: 1rem !important;
+    }
+    
+    /* Product selection table */
+    #selected-products-list table {
+        font-size: 0.875rem;
+    }
+    
+    #selected-products-list th,
+    #selected-products-list td {
+        padding: 0.5rem !important;
+        white-space: nowrap;
+    }
+    
+    /* History page improvements */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* History page improvements */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* History page - pagination improvements */
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination .page-item {
+        margin: 0.25rem;
+    }
+    
+    .pagination .page-link {
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Extra small devices (phones, less than 576px) */
+@media (max-width: 575.98px) {
+    /* Navigation */
+    .navbar-brand {
+        font-size: 1rem !important;
+    }
+    
+    /* Hero section */
+    .hero-section h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    .hero-section .lead {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Cards */
+    .card-title {
+        font-size: 1.1rem !important;
+    }
+    
+    /* Buttons */
+    .btn {
+        font-size: 0.875rem !important;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .btn-lg {
+        padding: 0.625rem 1.25rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Octane buttons */
+    .octane-btn-style {
+        font-size: 0.8rem !important;
+        padding: 0.4rem 0.5rem !important;
+    }
+    
+    .octane-number {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Forms */
+    .form-label {
+        font-size: 0.875rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .form-control,
+    .form-select {
+        font-size: 0.875rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    /* Tables */
+    .table {
+        font-size: 0.8rem !important;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.375rem 0.5rem !important;
+    }
+    
+    /* Spacing */
+    .mb-4 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .mt-4 {
+        margin-top: 1rem !important;
+    }
+    
+    /* Badges */
+    .badge {
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+    
+    /* Icons */
+    .bi {
+        font-size: 1rem !important;
+    }
+    
+    /* Container */
+    .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    /* Calculator selector cards */
+    .card-body p.card-text {
+        font-size: 0.875rem !important;
+    }
+    
+    .card-body ul {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Results container */
+    #results-container .card-header h4 {
+        font-size: 1rem !important;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .card-body {
+        padding: 1.25rem !important;
+    }
+    
+    .container {
+        max-width: 720px;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    .container {
+        max-width: 960px;
+    }
+}
+
+/* Product Selection Page Styles */
+.product-selection-card {
+    border-radius: 16px !important;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.product-selection-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%) !important;
+}
+
+.text-gradient-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.continue-card {
+    border-radius: 16px !important;
+    background: linear-gradient(135deg, rgba(25, 135, 84, 0.05) 0%, rgba(20, 108, 67, 0.05) 100%);
+    border: 2px dashed rgba(25, 135, 84, 0.2);
+    transition: all 0.3s ease;
+}
+
+.continue-card:hover {
+    border-color: rgba(25, 135, 84, 0.4);
+    transform: translateY(-2px);
+}
+
+.continue-btn-main {
+    border-radius: 12px !important;
+    font-size: 1.1rem !important;
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.continue-btn-main::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.continue-btn-main:hover::before {
+    width: 400px;
+    height: 400px;
+}
+
+.continue-btn-main:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}
+
+.continue-btn-main:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Form controls enhancement for product selection */
+.form-select-lg {
+    border-radius: 10px !important;
+    border: 2px solid #e9ecef !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1.1rem !important;
+    transition: all 0.3s ease;
+}
+
+.form-select-lg:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+    transform: translateY(-2px);
+}
+
+/* Product mobile cards */
+.product-mobile-card {
+    border-radius: 12px !important;
+    transition: all 0.3s ease;
+}
+
+.product-mobile-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Hero section */
+.hero-section {
+    padding: 2rem 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2rem !important;
+    }
+    
+    .hero-section .lead {
+        font-size: 1rem !important;
+    }
+    
+    .continue-btn-main {
+        font-size: 1rem !important;
+        padding: 0.75rem 1.5rem !important;
+    }
+    
+    .product-selection-card .card-body {
+        padding: 1.5rem !important;
+    }
+}
+
+/* Print styles improvements */
+@media print {
+    .navbar,
+    footer,
+    .btn,
+    #errorSection,
+    .card-header .btn {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+    
+    body {
+        background: white !important;
+        font-size: 12pt;
+    }
+    
+    .table {
+        font-size: 10pt !important;
+    }
+}
+
+/* Smooth card animations for results */
+#variants-list .card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Print styles */
 @media print {
     .navbar,

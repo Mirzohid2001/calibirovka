@@ -47,12 +47,22 @@
                             <li><a class="dropdown-item" href="{% url 'calibration:density_quick_calculator' %}">
                                 <i class="bi bi-lightning-charge me-2"></i>Быстрый калькулятор плотности
                             </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'calibration:product_selection' %}">
+                                <i class="bi bi-fuel-pump me-2"></i>Калькулятор смешивания бензина
+                            </a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}" 
                            href="{% url 'calibration:history' %}">
                             <i class="bi bi-clock-history me-1"></i>История
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'saved_configurations_list' %}active{% endif %}" 
+                           href="{% url 'calibration:saved_configurations_list' %}">
+                            <i class="bi bi-list-ul me-1"></i>Сохраненные
                         </a>
                     </li>
                     <!-- <li class="nav-item">
@@ -66,7 +76,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="container" style="padding-top: 4.5rem;">
+    <main class="container" style="padding-top: 4.5rem; padding-bottom: 2rem;">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -81,14 +91,14 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-light mt-5 py-4">
+    <footer class="bg-light mt-5 py-3 py-md-4">
         <div class="container text-center">
             <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0 text-muted">© 2024 Калькулятор перекачки из резервуаров</p>
+                <div class="col-12 col-md-6 mb-2 mb-md-0">
+                    <p class="mb-0 text-muted small">© 2025 Калькулятор перекачки из резервуаров</p>
                 </div>
-                <div class="col-md-6">
-                    <p class="mb-0 text-muted">
+                <div class="col-12 col-md-6">
+                    <p class="mb-0 text-muted small">
                         <i class="bi bi-info-circle me-1"></i>
                         Создан для расчетов откачки жидкостей из резервуаров
                     </p>

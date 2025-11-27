@@ -1,0 +1,137 @@
+{% extends 'calibration/base.html' %}
+
+{% load static %}
+
+{% block title %}Продукты и параметры - Калькуляторы резервуаров{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            <!-- Hero Section -->
+            <div class="text-center mb-5">
+                <div class="hero-section">
+                    <h1 class="display-4 fw-bold text-gradient-primary mb-3">
+                        <i class="bi bi-box-seam me-3"></i>
+                        Продукты и их параметры
+                    </h1>
+                    <p class="lead text-muted fs-5 d-none d-md-block">
+                        Выберите продукты для смешивания бензина и введите их октановое число и цену
+                    </p>
+                    <p class="text-muted d-md-none">
+                        Выберите продукты и введите октановое число и цену
+                    </p>
+                </div>
+            </div>
+
+            <!-- Основная карточка с продуктами -->
+            <div class="card shadow-lg border-0 product-selection-card mb-4">
+                <div class="card-header bg-gradient-primary text-white py-4">
+                    <h4 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-box-seam me-2"></i>
+                        Выбор продуктов
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Product tanlash dropdown -->
+                    <div class="mb-4">
+                        <label for="product-select" class="form-label fw-bold mb-2">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>
+                            Выберите продукт:
+                        </label>
+                        <select class="form-select form-select-lg" id="product-select">
+                            <option value="">-- Выберите продукт --</option>
+                            {% for product in products %}
+                            <option value="{{ product.id}}" 
+                                    data-name="{{ product.name }}"
+                                    data-description="{{ product.description|default:'' }}"
+                                    data-gost="{{ product.gost_percentage|default:100 }}">
+                                {{ product.name }} {% if product.gost_percentage %}(GOST: {{ product.gost_percentage }}%){% endif %}
+                            </option>
+                            {% empty %}
+                            <option value="">Добавьте продукты из панели администратора</option>
+                            {% endfor %}
+                        </select>
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Выберите продукт из списка и введите его октановое число и цену за килограмм</small>
+                        </div>
+                    </div>
+
+                    <!-- Tanlangan productlar ro'yxati -->
+                    <div id="selected-products-list" class="mt-4">
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3 mb-0">Не выбрано ни одного продукта</p>
+                            <small class="text-muted">Добавьте продукты, используя форму выше</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Saqlash qismi -->
+                    <div class="row g-3">
+                        <div class="col-12 col-md-7">
+                            <label for="config-name" class="form-label fw-bold">
+                                <i class="bi bi-tag me-2 text-success"></i>
+                                Название конфигурации (необязательно):
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="config-name" 
+                                   placeholder="Например: Конфигурация 2025">
+                        </div>
+                        <div class="col-12 col-md-5 d-flex flex-column flex-md-row align-items-stretch align-items-md-end gap-2">
+                            <button type="button" class="btn btn-success btn-lg flex-fill" id="save-products-btn">
+                                <i class="bi bi-save me-2"></i>
+                                Сохранить
+                            </button>
+                            <a href="{% url 'calibration:saved_configurations_list' %}" class="btn btn-info btn-lg flex-fill">
+                                <i class="bi bi-list-ul me-2"></i>
+                                Сохраненные
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Davom etish tugmasi -->
+            <div class="card shadow-lg border-0 continue-card">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-arrow-right-circle text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="mb-3 fw-bold">
+                        <span class="d-none d-md-inline">Следующий шаг: Выбор октанового числа и расчет</span>
+                        <span class="d-md-none">Следующий шаг</span>
+                    </h5>
+                    <p class="text-muted mb-4 d-none d-md-block">
+                        Введите октановое число и цену хотя бы для 2 продуктов, затем переходите к расчету
+                    </p>
+                    <p class="text-muted mb-4 d-md-none small">
+                        Введите октановое число и цену хотя бы для 2 продуктов
+                    </p>
+                    <button type="button" class="btn btn-danger btn-lg px-5 py-3 continue-btn-main w-100 w-md-auto" id="continue-btn" disabled>
+                        <i class="bi bi-arrow-right me-2"></i>
+                        <span class="fw-bold">
+                            <span class="d-none d-md-inline">Перейти к выбору октана и расчету</span>
+                            <span class="d-md-none">Далее</span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // URL konstantalarini global o'zgaruvchilarga yozish
+    const SAVE_CONFIG_URL = '{% url "calibration:save_product_configuration" %}';
+    const CALCULATOR_URL = '{% url "calibration:gasoline_blend_calculator" %}';
+    const LOAD_CONFIG_URL = '{% url "calibration:load_configuration" 0 %}';
+</script>
+<script src="{% static 'js/product_selection.js' %}"></script>
+{% endblock %}
+

@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 import scipy.interpolate
 import numpy as np
 
@@ -102,6 +102,35 @@ class Product(models.Model):
         verbose_name="Описание",
         help_text="Описание продукта, включая информацию о плотности"
     )
+    # Benzin aralashma parametrlari
+    octane_number = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Октановое число",
+        help_text="Октановое число продукта (например: 48, 52, 60, 80, 92, 95, 98, 100)",
+        validators=[MinValueValidator(0)]
+    )
+    price_per_liter = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Цена за литр (сум)",
+        help_text="Цена продукта за один литр в сумах",
+        validators=[MinValueValidator(0)]
+    )
+    gost_percentage = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name="GOST процент (%)",
+        help_text="Процент использования продукта в смеси согласно ГОСТ стандартам (0-100%)",
+        validators=[MinValueValidator(0)]
+    )
+    is_for_blending = models.BooleanField(
+        default=True,
+        verbose_name="Используется для смешивания",
+        help_text="Можно ли использовать этот продукт для создания бензиновых смесей"
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Дата создания"
@@ -117,7 +146,8 @@ class Product(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        octane_info = f" (Октановое число: {self.octane_number})" if self.octane_number else ""
+        return f"{self.name}{octane_info}"
 
 
 class CalibrationPoint(models.Model):
@@ -498,3 +528,138 @@ class DensityTemperatureCalculation(models.Model):
     @property
     def product_name(self):
         return self.product.name if self.product else "—"
+
+
+class GasolineBlendCalculation(models.Model):
+    """Модель для расчетов бензиновых смесей"""
+    # Входные данные
+    target_octane = models.IntegerField(
+        validators=[MinValueValidator(0)],
+        verbose_name="Целевое октановое число",
+        help_text="Желаемое октановое число смеси (например: 80, 92, 95, 98, 100)"
+    )
+    target_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Целевая цена (сум/литр)",
+        help_text="Опционально: желаемая цена за литр для оптимизации",
+        validators=[MinValueValidator(0)]
+    )
+    total_volume_liters = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Общий объем (литры)",
+        help_text="Опционально: общий объем смеси для расчета полной стоимости",
+        validators=[MinValueValidator(0)]
+    )
+    calculation_method = models.CharField(
+        max_length=20,
+        choices=[
+            ('linear', 'Линейная интерполяция'),
+            ('weighted', 'Взвешенная'),
+            ('research', 'Research метод')
+        ],
+        default='linear',
+        verbose_name="Метод расчета",
+        help_text="Метод расчета октанового числа смеси"
+    )
+    variants_count = models.IntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(20)],
+        verbose_name="Количество вариантов",
+        help_text="Сколько вариантов смесей показывать (1-20)"
+    )
+    
+    # Результаты
+    blend_variants = models.JSONField(
+        default=list,
+        verbose_name="Варианты смесей",
+        help_text="JSON структура с вариантами смесей"
+    )
+    best_variant_index = models.IntegerField(
+        default=0,
+        verbose_name="Индекс лучшего варианта",
+        help_text="Индекс варианта с наилучшей ценой"
+    )
+    
+    # Метаданные
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Примечания"
+    )
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Время расчета"
+    )
+
+    class Meta:
+        verbose_name = "Расчет бензиновой смеси"
+        verbose_name_plural = "Расчеты бензиновых смесей"
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"AI-{self.target_octane} ({self.timestamp.strftime('%d.%m.%Y %H:%M')}) - {len(self.blend_variants)} вариантов"
+
+    @property
+    def best_variant(self):
+        """Получить лучший вариант смеси"""
+        if self.blend_variants and 0 <= self.best_variant_index < len(self.blend_variants):
+            return self.blend_variants[self.best_variant_index]
+        return None
+
+    @property
+    def variants_count_display(self):
+        """Количество найденных вариантов"""
+        return len(self.blend_variants) if self.blend_variants else 0
+
+
+class SavedProductConfiguration(models.Model):
+    """Saqlangan product konfiguratsiyalari (oktan soni va narx bilan)"""
+    name = models.CharField(
+        max_length=200,
+        verbose_name="Nomi",
+        help_text="Saqlangan konfiguratsiya nomi",
+        default="Konfiguratsiya"
+    )
+    products_config = models.JSONField(
+        default=dict,
+        verbose_name="Productlar konfiguratsiyasi",
+        help_text="JSON struktura: {product_id: {octane, price, gost_percentage, ...}}"
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Tavsif",
+        help_text="Qo'shimcha ma'lumot"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Faol",
+        help_text="Ushbu konfiguratsiya faolmi?"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Yaratilgan vaqti"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Yangilangan vaqti"
+    )
+
+    class Meta:
+        verbose_name = "Saqlangan product konfiguratsiyasi"
+        verbose_name_plural = "Saqlangan product konfiguratsiyalari"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.created_at.strftime('%d.%m.%Y %H:%M')})"
+
+    @property
+    def products_count(self):
+        """Productlar soni"""
+        return len(self.products_config) if self.products_config else 0

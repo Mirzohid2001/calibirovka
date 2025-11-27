@@ -7,6 +7,8 @@ from .models import (
     VolumeWeightCalculation,
     AddingCalculation,
     DensityTemperatureCalculation,
+    GasolineBlendCalculation,
+    SavedProductConfiguration,
 )
 
 
@@ -44,13 +46,29 @@ class TankAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'description', 'created_at']
-    list_filter = ['created_at', 'updated_at']
+    list_display = [
+        'name',
+        'gost_percentage',
+        'is_for_blending',
+        'created_at'
+    ]
+    list_filter = [
+        'is_for_blending',
+        'created_at', 
+        'updated_at'
+    ]
     search_fields = ['name', 'description']
     readonly_fields = ['created_at', 'updated_at']
     fieldsets = (
         ('Информация о продукте', {
             'fields': ('name', 'description')
+        }),
+        ('Параметры бензиновой смеси (GOST)', {
+            'description': 'Октановое число и цена вводятся в интерфейсе калькулятора при каждом расчете. Здесь указывается только GOST процент использования продукта.',
+            'fields': (
+                'gost_percentage',
+                'is_for_blending'
+            )
         }),
         ('Метаданные', {
             'fields': ('created_at', 'updated_at'),
@@ -337,6 +355,111 @@ class DensityTemperatureCalculationAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('product')
+
+
+@admin.register(GasolineBlendCalculation)
+class GasolineBlendCalculationAdmin(admin.ModelAdmin):
+    list_display = [
+        'target_octane_display',
+        'variants_count_display',
+        'best_price_display',
+        'calculation_method',
+        'timestamp'
+    ]
+    list_filter = [
+        'target_octane',
+        'calculation_method',
+        'timestamp',
+    ]
+    search_fields = ['target_octane', 'notes']
+    readonly_fields = [
+        'blend_variants',
+        'best_variant_index',
+        'variants_count_display',
+        'timestamp'
+    ]
+    fieldsets = (
+        ('Входные данные', {
+            'fields': (
+                'target_octane',
+                'target_price',
+                'total_volume_liters',
+                'calculation_method',
+                'variants_count'
+            )
+        }),
+        ('Результаты расчета', {
+            'fields': (
+                'variants_count_display',
+                'best_variant_index',
+                'blend_variants',
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Метаданные', {
+            'fields': (
+                'notes',
+                'timestamp'
+            ),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def target_octane_display(self, obj):
+        return f"AI-{obj.target_octane}"
+    target_octane_display.short_description = 'Целевое октановое число'
+
+    def variants_count_display(self, obj):
+        return obj.variants_count_display
+    variants_count_display.short_description = 'Найдено вариантов'
+
+    def best_price_display(self, obj):
+        best = obj.best_variant
+        if best and 'final_price_per_liter' in best:
+            return f"{best['final_price_per_liter']:,.0f} сум/л"
+        return "—"
+    best_price_display.short_description = 'Лучшая цена'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request)
+
+    def has_add_permission(self, request):
+        # Расчеты создаются только через интерфейс приложения
+        return False
+
+
+@admin.register(SavedProductConfiguration)
+class SavedProductConfigurationAdmin(admin.ModelAdmin):
+    list_display = [
+        'name',
+        'products_count_display',
+        'is_active',
+        'created_at',
+        'updated_at'
+    ]
+    list_filter = [
+        'is_active',
+        'created_at',
+        'updated_at'
+    ]
+    search_fields = ['name', 'description']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Asosiy ma\'lumotlar', {
+            'fields': ('name', 'description', 'is_active')
+        }),
+        ('Productlar konfiguratsiyasi', {
+            'fields': ('products_config',)
+        }),
+        ('Meta', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def products_count_display(self, obj):
+        return obj.products_count
+    products_count_display.short_description = 'Productlar soni'
 
 
 # Настройка заголовков админки

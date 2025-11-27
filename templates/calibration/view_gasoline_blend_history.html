@@ -1,0 +1,95 @@
+{% extends 'calibration/base.html' %}
+
+{% load static %}
+
+{% block title %}Результаты расчета - {{ calculation_date }} - Калькуляторы резервуаров{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <!-- Sarlavha -->
+            <div class="text-center mb-4">
+                <h1 class="display-5 text-danger">
+                    <i class="bi bi-clock-history me-3"></i>
+                    Результаты расчета ({{ calculation_date }})
+                </h1>
+                <p class="lead text-muted">
+                    Целевое октановое число: <strong>AI-{{ target_octane }}</strong>
+                    {% if total_weight %}
+                    | Общий вес: <strong>{{ total_weight }} кг</strong>
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Вернуться назад -->
+            <div class="mb-3">
+                <a href="{% url 'calibration:history' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Вернуться к истории
+                </a>
+            </div>
+
+            <!-- Natijalar -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Результаты ({{ variants_count }} вариантов)
+                    </h4>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="compare-btn" class="btn btn-info btn-sm" style="display: none;">
+                            <i class="bi bi-arrow-left-right me-2"></i>
+                            Сравнить (<span id="selected-count">0</span>)
+                        </button>
+                        <button type="button" id="export-excel-btn" class="btn btn-light btn-sm">
+                            <i class="bi bi-file-earmark-excel me-2"></i>
+                            Экспорт в Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="variants-list"></div>
+                    
+                    <!-- Grafiklar -->
+                    <div id="charts-container" style="display: none;" class="mt-4">
+                        <hr>
+                        <h5 class="mb-3">
+                            <i class="bi bi-graph-up me-2"></i>
+                            Графики цены и октана
+                        </h5>
+                        <div class="row">
+                            <div class="col-12">
+                                <canvas id="price-octane-chart" style="max-height: 400px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js kutubxonasi -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Tarixdan yuklangan ma'lumotlar
+    const HISTORY_DATA = {
+        variants: {{ variants_json|safe }},
+        target_octane: {{ target_octane }},
+        total_weight: {% if total_weight %}{{ total_weight }}{% else %}null{% endif %},
+        calculation_date: "{{ calculation_date }}"
+    };
+    
+    console.log('HISTORY_DATA loaded:', HISTORY_DATA);
+    
+    // URL konstantalarini global o'zgaruvchilarga yozish
+    const CALCULATE_URL = '{% url "calibration:calculate_gasoline_blend" %}';
+    const PRODUCT_SELECTION_URL = '{% url "calibration:product_selection" %}';
+    const EXPORT_EXCEL_URL = '{% url "calibration:export_blend_variants_excel" %}';
+</script>
+<script src="{% static 'js/view_gasoline_blend_history.js' %}"></script>
+{% endblock %}
+

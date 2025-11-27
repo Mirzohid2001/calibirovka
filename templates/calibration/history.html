@@ -5,22 +5,23 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
+            <h2 class="mb-0">
                 <i class="bi bi-clock-history me-2"></i>
                 История всех расчетов
             </h2>
-            <a href="{% url 'calibration:calculator_selector' %}" class="btn btn-primary">
+            <a href="{% url 'calibration:calculator_selector' %}" class="btn btn-primary w-100 w-sm-auto">
                 <i class="bi bi-calculator me-1"></i>
                 Новый расчет
             </a>
         </div>
 
         {% if calculations %}
-            <div class="card shadow">
+            <!-- Desktop view: Table -->
+            <div class="card shadow d-none d-md-block">
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover mb-0 history-table">
                             <thead class="table-dark">
                                 <tr>
                                     <th>Дата/Время</th>
@@ -55,6 +56,10 @@
                                             <span class="badge bg-warning text-dark">
                                                 <i class="bi bi-thermometer me-1"></i>Плотность
                                             </span>
+                                        {% elif calc.type == 'gasoline_blend' %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-fuel-pump me-1"></i>Смешивание бензина
+                                            </span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -65,22 +70,25 @@
                                         <small class="text-muted">{{ calc.description }}</small>
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-outline-primary" 
-                                                type="button" 
-                                                data-bs-toggle="collapse" 
-                                                data-bs-target="#details-{{ calc.type }}-{{ calc.object.id }}" 
-                                                aria-expanded="false">
-                                            <i class="bi bi-eye me-1"></i>
-                                            Подробности
-                                        </button>
-                                        <form method="post" action="{% url 'calibration:delete_calculation' calc.object.id %}" 
-                                              class="d-inline" 
-                                              onsubmit="return confirm('Вы уверены, что хотите удалить этот расчет?')">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
+                                        <div class="d-flex flex-column flex-sm-row gap-2">
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    type="button" 
+                                                    data-bs-toggle="collapse" 
+                                                    data-bs-target="#details-{{ calc.type }}-{{ calc.object.id }}" 
+                                                    aria-expanded="false">
+                                                <i class="bi bi-eye me-1"></i>
+                                                <span class="d-none d-lg-inline">Подробности</span>
+                                                <span class="d-lg-none">Подробнее</span>
                                             </button>
-                                        </form>
+                                            <form method="post" action="{% url 'calibration:delete_calculation' calc.object.id %}" 
+                                                  class="d-inline" 
+                                                  onsubmit="return confirm('Вы уверены, что хотите удалить этот расчет?')">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr>
@@ -93,7 +101,7 @@
                                                         Подробная информация о расчете откачки
                                                     </h6>
                                                     <div class="row g-3">
-                                                        <div class="col-md-6">
+                                                        <div class="col-12 col-md-6">
                                                             <div class="card h-100">
                                                                 <div class="card-header bg-primary text-white">
                                                                     <h6 class="mb-0">Входные данные</h6>
@@ -162,7 +170,7 @@
                                                         Подробная информация о расчете объема и веса
                                                     </h6>
                                                     <div class="row g-3">
-                                                        <div class="col-md-6">
+                                                        <div class="col-12 col-md-6">
                                                             <div class="card h-100">
                                                                 <div class="card-header bg-success text-white">
                                                                     <h6 class="mb-0">Входные данные</h6>
@@ -219,7 +227,7 @@
                                                         Подробная информация о расчете добавления
                                                     </h6>
                                                     <div class="row g-3">
-                                                        <div class="col-md-6">
+                                                        <div class="col-12 col-md-6">
                                                             <div class="card h-100">
                                                                 <div class="card-header bg-info text-white">
                                                                     <h6 class="mb-0">Входные данные</h6>
@@ -288,7 +296,7 @@
                                                         Корректировка плотности по температуре
                                                     </h6>
                                                     <div class="row g-3">
-                                                        <div class="col-md-6">
+                                                        <div class="col-12 col-md-6">
                                                             <div class="card h-100">
                                                                 <div class="card-header bg-warning">
                                                                     <h6 class="mb-0">Входные данные</h6>
@@ -343,8 +351,71 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                {% elif calc.type == 'gasoline_blend' %}
+                                                    <h6 class="mb-3">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        Данные расчета смешивания бензина
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-danger text-white">
+                                                                    <h6 class="mb-0">Входные данные</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-123 me-1"></i>Целевое октановое число:</td>
+                                                                            <td><strong>AI-{{ calc.object.target_octane }}</strong></td>
+                                                                        </tr>
+                                                                        {% if calc.object.total_volume_liters %}
+                                                                        <tr>
+                                                                            <td><i class="bi bi-scale me-1"></i>Общий вес:</td>
+                                                                            <td><strong>{{ calc.object.total_volume_liters }} кг</strong></td>
+                                                                        </tr>
+                                                                        {% endif %}
+                                                                        <tr>
+                                                                            <td><i class="bi bi-list-ul me-1"></i>Количество вариантов:</td>
+                                                                            <td><strong>{{ calc.object.variants_count }}</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><i class="bi bi-gear me-1"></i>Метод расчета:</td>
+                                                                            <td><strong>{{ calc.object.calculation_method }}</strong></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100">
+                                                                <div class="card-header bg-success text-white">
+                                                                    <h6 class="mb-0">Результаты</h6>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tr>
+                                                                            <td><i class="bi bi-list-check me-1"></i>Найденные варианты:</td>
+                                                                            <td><strong>{{ calc.object.variants_count_display }}</strong></td>
+                                                                        </tr>
+                                                                        {% if calc.object.best_variant %}
+                                                                        <tr>
+                                                                            <td><i class="bi bi-star me-1"></i>Лучший вариант:</td>
+                                                                            <td><strong>№{{ calc.object.best_variant_index|add:1 }}</strong></td>
+                                                                        </tr>
+                                                                        {% endif %}
+                                                                    </table>
+                                                                    <div class="mt-3">
+                                                                        <a href="{% url 'calibration:view_gasoline_blend_history' calc.object.id %}" class="btn btn-sm btn-primary">
+                                                                            <i class="bi bi-eye me-1"></i>
+                                                                            Подробнее
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 {% endif %}
-                                                {% if calc.type != 'density' %}
+                                                {% if calc.type != 'density' and calc.type != 'gasoline_blend' %}
                                                 <div class="mt-3">
                                                     {% if calc.object.notes %}
                                                     <div class="alert alert-info">
@@ -374,6 +445,199 @@
                         </table>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Mobile view: Cards -->
+            <div class="d-md-none">
+                {% for calc in calculations %}
+                <div class="card shadow mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="fw-bold">{{ calc.timestamp|date:"d.m.Y" }} {{ calc.timestamp|time:"H:i" }}</div>
+                                {% if calc.type == 'transfer' %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-arrow-down-circle me-1"></i>Откачка
+                                    </span>
+                                {% elif calc.type == 'volume_weight' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-rulers me-1"></i>Объем/Вес
+                                    </span>
+                                {% elif calc.type == 'adding' %}
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-plus-circle me-1"></i>Добавление
+                                    </span>
+                                {% elif calc.type == 'density' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-thermometer me-1"></i>Плотность
+                                    </span>
+                                {% elif calc.type == 'gasoline_blend' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-fuel-pump me-1"></i>Смешивание бензина
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#mobile-details-{{ calc.type }}-{{ calc.object.id }}" 
+                                        aria-expanded="false">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <form method="post" action="{% url 'calibration:delete_calculation' calc.object.id %}" 
+                                      class="d-inline" 
+                                      onsubmit="return confirm('Вы уверены, что хотите удалить этот расчет?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% if calc.tank_name != '—' %}
+                        <div class="mb-2">
+                            <small class="text-muted">Резервуар:</small> <strong>{{ calc.tank_name }}</strong>
+                        </div>
+                        {% endif %}
+                        {% if calc.product_name %}
+                        <div class="mb-2">
+                            <small class="text-muted">Продукт:</small> <strong>{{ calc.product_name }}</strong>
+                        </div>
+                        {% endif %}
+                        <div class="mb-2">
+                            <small class="text-muted">{{ calc.description|truncatewords:15 }}</small>
+                        </div>
+                        <div class="collapse" id="mobile-details-{{ calc.type }}-{{ calc.object.id }}">
+                            <div class="card card-body border-0 bg-light mt-3">
+                                {% if calc.type == 'transfer' %}
+                                    <h6 class="mb-3">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Подробная информация о расчете откачки
+                                    </h6>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-primary text-white">
+                                                    <h6 class="mb-0">Входные данные</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <table class="table table-sm table-borderless mb-0">
+                                                        <tr>
+                                                            <td><i class="bi bi-building me-1"></i>Резервуар:</td>
+                                                            <td><strong>{{ calc.object.tank.name }}</strong></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><i class="bi bi-droplet me-1"></i>Продукт:</td>
+                                                            <td><strong>{{ calc.object.product.name }}</strong></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><i class="bi bi-speedometer me-1"></i>Плотность:</td>
+                                                            <td><strong>{{ calc.object.density_kg_per_liter|floatformat:4 }} кг/л</strong></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><i class="bi bi-rulers me-1"></i>Начальная высота:</td>
+                                                            <td><strong>{{ calc.object.initial_height_cm|floatformat:2 }} см</strong></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><i class="bi bi-arrow-down-circle me-1"></i>Вес откачки:</td>
+                                                            <td><strong>{{ calc.object.transfer_weight_kg|floatformat:2 }} кг</strong></td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-success text-white">
+                                                    <h6 class="mb-0">Результаты</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <table class="table table-sm table-borderless mb-0">
+                                                        <tr>
+                                                            <td><i class="bi bi-droplet-half me-1"></i>Начальный объем:</td>
+                                                            <td><strong>{{ calc.object.initial_volume_liters|floatformat:2 }} л</strong></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><i class="bi bi-droplet me-1"></i>Объем после откачки:</td>
+                                                            <td><strong>{{ calc.object.final_volume_liters|floatformat:2 }} л</strong></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><i class="bi bi-arrow-down-circle me-1"></i>Откачанный объем:</td>
+                                                            <td><strong>{{ calc.object.volume_added_liters|floatformat:2 }} л</strong></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><i class="bi bi-arrows-vertical me-1"></i>Высота после откачки:</td>
+                                                            <td><strong class="text-success">{{ calc.object.final_height_cm|floatformat:2 }} см</strong></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><i class="bi bi-percent me-1"></i>Заполнение:</td>
+                                                            <td><strong>{{ calc.object.fill_percentage|floatformat:1 }}%</strong></td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% elif calc.type == 'gasoline_blend' %}
+                                    <h6 class="mb-3">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Данные расчета смешивания бензина
+                                    </h6>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-danger text-white">
+                                                    <h6 class="mb-0">Входные данные</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <table class="table table-sm table-borderless mb-0">
+                                                        <tr>
+                                                            <td><i class="bi bi-123 me-1"></i>Целевое октановое число:</td>
+                                                            <td><strong>AI-{{ calc.object.target_octane }}</strong></td>
+                                                        </tr>
+                                                        {% if calc.object.total_volume_liters %}
+                                                        <tr>
+                                                            <td><i class="bi bi-scale me-1"></i>Общий вес:</td>
+                                                            <td><strong>{{ calc.object.total_volume_liters }} кг</strong></td>
+                                                        </tr>
+                                                        {% endif %}
+                                                        <tr>
+                                                            <td><i class="bi bi-list-ul me-1"></i>Количество вариантов:</td>
+                                                            <td><strong>{{ calc.object.variants_count }}</strong></td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-success text-white">
+                                                    <h6 class="mb-0">Результаты</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <table class="table table-sm table-borderless mb-0">
+                                                        <tr>
+                                                            <td><i class="bi bi-list-check me-1"></i>Найденные варианты:</td>
+                                                            <td><strong>{{ calc.object.variants_count_display }}</strong></td>
+                                                        </tr>
+                                                    </table>
+                                                    <div class="mt-3">
+                                                        <a href="{% url 'calibration:view_gasoline_blend_history' calc.object.id %}" class="btn btn-sm btn-primary w-100">
+                                                            <i class="bi bi-eye me-1"></i>
+                                                            Подробнее
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
 
             <!-- Pagination -->

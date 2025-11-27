@@ -7,7 +7,7 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
+        <div class="col-lg-11">
             <div class="text-center mb-5">
                 <h1 class="display-4 text-primary">
                     <i class="bi bi-calculator me-3"></i>
@@ -18,9 +18,9 @@
                 </p>
             </div>
 
-            <div class="row g-4">
+            <div class="row g-3 g-md-4">
                 <!-- Калькулятор откачки -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-12 col-sm-6 col-md-6 col-lg-4 mb-3 mb-md-0">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body text-center p-4">
                             <div class="mb-3">
@@ -44,7 +44,7 @@
                 </div>
 
                 <!-- Калькулятор объема и веса -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-12 col-sm-6 col-md-6 col-lg-4 mb-3 mb-md-0">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body text-center p-4">
                             <div class="mb-3">
@@ -68,7 +68,7 @@
                 </div>
 
                 <!-- Калькулятор добавления -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-12 col-sm-6 col-md-6 col-lg-4 mb-3 mb-md-0">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body text-center p-4">
                             <div class="mb-3">
@@ -92,7 +92,7 @@
                 </div>
 
                 <!-- Калькулятор плотности -->
-                <div class="col-md-6 col-lg-3">
+                <div class="col-12 col-sm-6 col-md-6 col-lg-4 mb-3 mb-md-0">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body text-center p-4">
                             <div class="mb-3">
@@ -110,6 +110,30 @@
                             <a href="{% url 'calibration:density_calculator' %}" class="btn btn-warning btn-lg w-100 text-dark">
                                 <i class="bi bi-thermometer me-2"></i>
                                 Открыть калькулятор
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Калькулятор смешивания бензина -->
+                <div class="col-12 col-sm-6 col-md-6 col-lg-4 mb-3 mb-md-0">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="bi bi-fuel-pump text-danger" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="card-title">Смешивание бензина</h4>
+                            <p class="card-text text-muted">
+                                Смешивание видов бензина по стандартам ГОСТ для создания вариантов с требуемым октановым числом
+                            </p>
+                            <ul class="list-unstyled text-start small">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>По октановому числу</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Требования ГОСТ</li>
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>Оптимизация цены</li>
+                            </ul>
+                            <a href="{% url 'calibration:product_selection' %}" class="btn btn-danger btn-lg w-100">
+                                <i class="bi bi-fuel-pump me-2"></i>
+                                Открыть
                             </a>
                         </div>
                     </div>
