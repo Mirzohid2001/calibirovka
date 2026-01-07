@@ -910,4 +910,527 @@ footer {
     body {
         background: white !important;
     }
+}
+
+/* ==========================================
+   RESULTS MODAL STYLES - ENHANCED DESIGN
+   ========================================== */
+
+/* Modal backdrop with blur effect */
+.modal-backdrop {
+    backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Modal content animation and styling */
+#resultsModal .modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: modalSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Modal header enhanced styling */
+#resultsModal .modal-header {
+    border-radius: 20px 20px 0 0 !important;
+    padding: 1.5rem 2rem;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+#resultsModal .modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+#resultsModal .modal-header.bg-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%) !important;
+}
+
+#resultsModal .modal-header.bg-success {
+    background: linear-gradient(135deg, #198754 0%, #157347 100%) !important;
+}
+
+#resultsModal .modal-header.bg-info {
+    background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
+}
+
+#resultsModal .modal-header.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%) !important;
+}
+
+#resultsModal .modal-header.bg-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+}
+
+#resultsModal .modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+}
+
+#resultsModal .modal-title i {
+    animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+#resultsModal .btn-close {
+    opacity: 0.9;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+#resultsModal .btn-close:hover {
+    opacity: 1;
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* Modal body enhanced styling */
+#resultsModal .modal-body {
+    padding: 2rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Custom scrollbar for modal body */
+#resultsModal .modal-body::-webkit-scrollbar {
+    width: 10px;
+}
+
+#resultsModal .modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#resultsModal .modal-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #0d6efd 0%, #0b5ed7 100%);
+    border-radius: 10px;
+}
+
+#resultsModal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #0b5ed7 0%, #0a58ca 100%);
+}
+
+/* Result sections styling */
+#resultsModal .modal-body h6 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    word-wrap: break-word;
+    word-break: break-word;
+    flex-wrap: wrap;
+}
+
+#resultsModal .modal-body h6 i {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+    color: #0d6efd;
+}
+
+#resultsModal .modal-body p {
+    font-size: 1rem;
+    color: #212529;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+#resultsModal .modal-body p:last-child {
+    border-bottom: none;
+}
+
+#resultsModal .modal-body .h4,
+#resultsModal .modal-body .h5 {
+    font-weight: 700;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    margin: 0.5rem 0;
+}
+
+#resultsModal .modal-body .text-success {
+    color: #198754 !important;
+    animation: resultHighlight 1s ease-in-out;
+}
+
+#resultsModal .modal-body .text-primary {
+    color: #0d6efd !important;
+    animation: resultHighlight 1s ease-in-out;
+}
+
+#resultsModal .modal-body .text-info {
+    color: #0dcaf0 !important;
+    animation: resultHighlight 1s ease-in-out;
+}
+
+@keyframes resultHighlight {
+    0% { transform: scale(0.9); opacity: 0; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Row styling in modal */
+#resultsModal .modal-body .row {
+    margin-bottom: 1.5rem;
+}
+
+#resultsModal .modal-body .row:last-child {
+    margin-bottom: 0;
+}
+
+/* HR styling */
+#resultsModal .modal-body hr {
+    margin: 1.5rem 0;
+    border: none;
+    border-top: 2px solid #e9ecef;
+    background: linear-gradient(90deg, transparent, #0d6efd, transparent);
+    height: 2px;
+}
+
+/* Alert styling in modal */
+#resultsModal .modal-body .alert {
+    border-radius: 12px;
+    border-left: 4px solid;
+    padding: 1rem 1.25rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: alertSlideIn 0.5s ease-out;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+@keyframes alertSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+#resultsModal .modal-body .alert-success {
+    background: linear-gradient(135deg, rgba(25, 135, 84, 0.1) 0%, rgba(20, 108, 67, 0.1) 100%);
+    border-left-color: #198754;
+    color: #0f5132;
+}
+
+#resultsModal .modal-body .alert-info {
+    background: linear-gradient(135deg, rgba(13, 202, 240, 0.1) 0%, rgba(10, 162, 192, 0.1) 100%);
+    border-left-color: #0dcaf0;
+    color: #055160;
+}
+
+#resultsModal .modal-body .alert strong {
+    font-weight: 700;
+}
+
+/* Modal footer enhanced styling */
+#resultsModal .modal-footer {
+    border-top: 2px solid #e9ecef;
+    padding: 1.25rem 2rem;
+    background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 0 0 20px 20px;
+}
+
+#resultsModal .modal-footer .btn {
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#resultsModal .modal-footer .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#resultsModal .modal-footer .btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    border: none;
+}
+
+#resultsModal .modal-footer .btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+}
+
+/* Value highlights */
+#resultsModal .modal-body .mb-2.h5,
+#resultsModal .modal-body .h5 {
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%);
+    border-radius: 10px;
+    display: inline-block;
+    border-left: 4px solid #0d6efd;
+    margin-top: 0.5rem;
+}
+
+/* Small text styling */
+#resultsModal .modal-body .small {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+#resultsModal .modal-body .text-muted {
+    color: #6c757d !important;
+}
+
+/* Responsive adjustments for modal */
+@media (max-width: 768px) {
+    #resultsModal .modal-dialog {
+        margin: 0.25rem;
+        max-width: calc(100% - 0.5rem);
+    }
+    
+    #resultsModal .modal-content {
+        border-radius: 15px;
+        max-height: calc(100vh - 0.5rem);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    #resultsModal .modal-header {
+        padding: 0.875rem 1rem;
+        border-radius: 15px 15px 0 0 !important;
+        flex-shrink: 0;
+    }
+    
+    #resultsModal .modal-title {
+        font-size: 1.1rem;
+    }
+    
+    #resultsModal .modal-body {
+        padding: 1rem;
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex: 1 1 auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Force single column layout on mobile */
+    #resultsModal .modal-body .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    #resultsModal .modal-body .row > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    
+    #resultsModal .modal-body .row > [class*="col-"]:last-child {
+        margin-bottom: 0;
+    }
+    
+    #resultsModal .modal-footer {
+        padding: 0.875rem 1rem;
+        border-radius: 0 0 15px 15px;
+        flex-shrink: 0;
+    }
+    
+    #resultsModal .modal-footer .btn {
+        padding: 0.625rem 1.5rem;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+    
+    /* Adjust text sizes for better readability */
+    #resultsModal .modal-body h6 {
+        font-size: 0.8rem;
+        margin-bottom: 0.4rem;
+        word-break: break-word;
+    }
+    
+    #resultsModal .modal-body p {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        word-wrap: break-word;
+        word-break: break-word;
+        line-height: 1.5;
+    }
+    
+    #resultsModal .modal-body .h4,
+    #resultsModal .modal-body .h5 {
+        font-size: 1.1rem;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+    
+    #resultsModal .modal-body .small {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+    
+    /* Alert adjustments */
+    #resultsModal .modal-body .alert {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+    
+    /* HR spacing */
+    #resultsModal .modal-body hr {
+        margin: 1rem 0;
+    }
+    
+    /* Value boxes */
+    #resultsModal .modal-body .mb-2.h5,
+    #resultsModal .modal-body .h5 {
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+/* Extra small devices (phones) */
+@media (max-width: 575.98px) {
+    #resultsModal .modal-dialog {
+        margin: 0.125rem;
+        max-width: calc(100% - 0.25rem);
+    }
+    
+    #resultsModal .modal-header {
+        padding: 0.75rem 0.875rem;
+    }
+    
+    #resultsModal .modal-title {
+        font-size: 1rem;
+        line-height: 1.3;
+    }
+    
+    #resultsModal .modal-body {
+        padding: 0.875rem;
+        max-height: calc(100vh - 180px);
+    }
+    
+    #resultsModal .modal-body h6 {
+        font-size: 0.75rem;
+        margin-bottom: 0.35rem;
+    }
+    
+    #resultsModal .modal-body p {
+        font-size: 0.85rem;
+        margin-bottom: 0.65rem;
+        padding: 0.4rem 0;
+    }
+    
+    #resultsModal .modal-body .h4,
+    #resultsModal .modal-body .h5 {
+        font-size: 1rem;
+        padding: 0.5rem 0.625rem;
+    }
+    
+    #resultsModal .modal-body .small {
+        font-size: 0.75rem;
+    }
+    
+    #resultsModal .modal-body .alert {
+        padding: 0.65rem 0.875rem;
+        font-size: 0.8rem;
+        margin-top: 1rem;
+    }
+    
+    #resultsModal .modal-footer {
+        padding: 0.75rem 0.875rem;
+    }
+    
+    #resultsModal .modal-footer .btn {
+        padding: 0.55rem 1.25rem;
+        font-size: 0.85rem;
+    }
+    
+    /* Icon adjustments */
+    #resultsModal .modal-body h6 i {
+        font-size: 0.95rem;
+        margin-right: 0.35rem;
+    }
+    
+    /* Close button */
+    #resultsModal .btn-close {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Very small devices (small phones) */
+@media (max-width: 400px) {
+    #resultsModal .modal-body {
+        padding: 0.75rem;
+        max-height: calc(100vh - 160px);
+    }
+    
+    #resultsModal .modal-body h6 {
+        font-size: 0.7rem;
+    }
+    
+    #resultsModal .modal-body p {
+        font-size: 0.8rem;
+    }
+    
+    #resultsModal .modal-body .h5 {
+        font-size: 0.95rem;
+        padding: 0.45rem 0.5rem;
+    }
+    
+    #resultsModal .modal-body .alert {
+        font-size: 0.75rem;
+        padding: 0.6rem 0.75rem;
+    }
 } 

@@ -76,52 +76,58 @@
                     </div>
                 </form>
 
-                {% if result %}
-                <div class="mt-4">
-                    <div class="card bg-light border-0">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="bi bi-check-circle-fill text-secondary me-2"></i>
-                                Результат расчета
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p class="mb-1 text-muted">Фактическая плотность</p>
-                                    <p class="h5">{{ result.actual_density|floatformat:2 }} кг/м³</p>
-                                    <p class="mb-1 text-muted">Текущая температура</p>
-                                    <p class="h5">{{ result.actual_temperature|floatformat:2 }} °C</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p class="mb-1 text-muted">Целевая температура</p>
-                                    <p class="h5">{{ result.desired_temperature|floatformat:2 }} °C</p>
-                                    <p class="mb-1 text-muted">Плотность при целевой температуре</p>
-                                    <p class="h4 text-success">{{ result.corrected_density|floatformat:2 }} кг/м³</p>
-                            <p class="small text-muted mb-0">
-                                Изменение: {{ result.density_difference|floatformat:2 }} кг/м³
-                            </p>
-                            <p class="small text-muted">
-                                Температурная поправка: {{ result.temperature_correction|floatformat:2 }} кг/м³ на °C
-                            </p>
-                            {% if result.density_note %}
-                            <p class="small text-muted">
-                                {{ result.density_note }}
-                            </p>
-                            {% endif %}
-                                </div>
-                            </div>
-                            <hr>
-                            <p class="small mb-0">
-                                Расчет выполнен по формуле ρ₂ = ρ₁ − Δρ · (T₂ − T₁), где Δρ = {{ result.temperature_correction|floatformat:2 }} кг/м³·°C⁻¹.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show modal if result exists
+    {% if result %}
+    const resultHtml = `
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-1 text-muted">Фактическая плотность</p>
+                <p class="h5">{{ result.actual_density|floatformat:2 }} кг/м³</p>
+                <p class="mb-1 text-muted mt-3">Текущая температура</p>
+                <p class="h5">{{ result.actual_temperature|floatformat:2 }} °C</p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1 text-muted">Целевая температура</p>
+                <p class="h5">{{ result.desired_temperature|floatformat:2 }} °C</p>
+                <p class="mb-1 text-muted mt-3">Плотность при целевой температуре</p>
+                <p class="h4 text-success">{{ result.corrected_density|floatformat:2 }} кг/м³</p>
+                <p class="small text-muted mb-0">
+                    Изменение: {{ result.density_difference|floatformat:2 }} кг/м³
+                </p>
+                <p class="small text-muted">
+                    Температурная поправка: {{ result.temperature_correction|floatformat:2 }} кг/м³ на °C
+                </p>
+                {% if result.density_note %}
+                <p class="small text-muted">
+                    {{ result.density_note }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        <hr>
+        <p class="small mb-0">
+            Расчет выполнен по формуле ρ₂ = ρ₁ − Δρ · (T₂ − T₁), где Δρ = {{ result.temperature_correction|floatformat:2 }} кг/м³·°C⁻¹.
+        </p>
+    `;
+    document.getElementById('resultsModalBody').innerHTML = resultHtml;
+    // Change modal header color for this calculator
+    const modalHeader = document.querySelector('#resultsModal .modal-header');
+    if (modalHeader) {
+        modalHeader.className = 'modal-header bg-secondary text-white';
+    }
+    const resultsModal = new bootstrap.Modal(document.getElementById('resultsModal'));
+    resultsModal.show();
+    {% endif %}
+});
+</script>
 {% endblock %}
 
