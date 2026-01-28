@@ -31,7 +31,7 @@
                                         data-capacity="{{ tank.capacity_liters }}"
                                         data-height="{{ tank.height_cm }}"
                                         {% if tank.id|stringformat:"s" == request.POST.tank %}selected{% endif %}>
-                                    {{ tank.name }} ({{ tank.capacity_liters|floatformat:0 }}L, {{ tank.height_cm }}см)
+                                    {{ tank.name }}
                                 </option>
                             {% endfor %}
                         </select>
@@ -49,7 +49,7 @@
                             {% for product in products %}
                                 <option value="{{ product.id }}"
                                         {% if product.id|stringformat:"s" == request.POST.product %}selected{% endif %}>
-                                    {{ product.name }} - {{ product.description }}
+                                    {{ product.name }}
                                 </option>
                             {% endfor %}
                         </select>
