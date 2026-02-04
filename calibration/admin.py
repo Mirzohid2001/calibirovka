@@ -9,6 +9,7 @@ from .models import (
     DensityTemperatureCalculation,
     GasolineBlendCalculation,
     SavedProductConfiguration,
+    ProcessingCalculation,
 )
 
 
@@ -460,6 +461,73 @@ class SavedProductConfigurationAdmin(admin.ModelAdmin):
     def products_count_display(self, obj):
         return obj.products_count
     products_count_display.short_description = 'Productlar soni'
+
+
+@admin.register(ProcessingCalculation)
+class ProcessingCalculationAdmin(admin.ModelAdmin):
+    list_display = [
+        'calculation_date',
+        'materials_count_display',
+        'total_percentage',
+        'total_octane_percent',
+        'total_cost',
+        'sale_price',
+        'total_profit',
+        'timestamp'
+    ]
+    list_filter = [
+        'calculation_date',
+        'timestamp',
+    ]
+    search_fields = ['notes']
+    readonly_fields = [
+        'total_percentage',
+        'total_octane_percent',
+        'total_cost',
+        'total_profit',
+        'materials_count_display',
+        'timestamp'
+    ]
+    fieldsets = (
+        ('Основная информация', {
+            'fields': (
+                'calculation_date',
+                'sale_price',
+            )
+        }),
+        ('Результаты расчета', {
+            'fields': (
+                'materials_count_display',
+                'total_percentage',
+                'total_octane_percent',
+                'total_cost',
+                'total_profit',
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Материалы', {
+            'fields': ('materials',),
+            'classes': ('collapse',)
+        }),
+        ('Метаданные', {
+            'fields': (
+                'notes',
+                'timestamp'
+            ),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def materials_count_display(self, obj):
+        return obj.materials_count
+    materials_count_display.short_description = 'Количество материалов'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request)
+
+    def has_add_permission(self, request):
+        # Расчеты создаются только через интерфейс приложения
+        return False
 
 
 # Настройка заголовков админки

@@ -13,6 +13,7 @@ from .models import (
     DensityTemperatureCalculation,
     GasolineBlendCalculation,
     SavedProductConfiguration,
+    ProcessingCalculation,
 )
 import json
 import logging
@@ -269,6 +270,7 @@ def history(request):
     adding_calculations = AddingCalculation.objects.all().order_by('-timestamp')
     density_calculations = DensityTemperatureCalculation.objects.all().order_by('-timestamp')
     gasoline_blend_calculations = GasolineBlendCalculation.objects.all().order_by('-timestamp')
+    processing_calculations = ProcessingCalculation.objects.all().order_by('-timestamp')
     
     # Объединить все расчеты и отсортировать по времени
     all_calculations = []
@@ -324,6 +326,17 @@ def history(request):
             'description': f"Смешивание бензина: {variants_count} вариантов, целевое октановое число: {calc.target_octane}"
         })
     
+    for calc in processing_calculations:
+        materials_count = len(calc.materials) if calc.materials else 0
+        all_calculations.append({
+            'type': 'processing',
+            'object': calc,
+            'timestamp': calc.timestamp,
+            'tank_name': '—',
+            'product_name': f"Переработка ({calc.calculation_date.strftime('%d.%m.%Y')})",
+            'description': f"Переработка: {materials_count} материалов, прибыль: ${calc.total_profit:.2f}"
+        })
+    
     # Сортировка по времени (новые сначала)
     all_calculations.sort(key=lambda x: x['timestamp'], reverse=True)
     
@@ -342,8 +355,17 @@ def history(request):
 def delete_calculation(request, calculation_id):
     """Удалить расчет"""
     if request.method == 'POST':
-        # Попробуем найти расчет во всех трех моделях
+        # Попробуем найти расчет во всех моделях
         calculation = None
+        
+        # Проверяем ProcessingCalculation
+        try:
+            calculation = ProcessingCalculation.objects.get(id=calculation_id)
+            calculation.delete()
+            messages.success(request, 'Расчет переработки успешно удален.')
+            return redirect('calibration:history')
+        except ProcessingCalculation.DoesNotExist:
+            pass
         
         # Проверяем TransferCalculation
         try:
@@ -2284,6 +2306,112 @@ def view_gasoline_blend_history(request, calculation_id):
         logger.error(f"Gasoline blend history view error: {str(e)}", exc_info=True)
         messages.error(request, f'Xatolik: {str(e)}')
         return redirect('calibration:history')
+
+
+def processing_calculator(request):
+    """Калькулятор переработки (Excel'ga o'xshash)"""
+    products = Product.objects.filter(is_for_blending=True).order_by('name')
+    return render(request, 'calibration/processing.html', {
+        'products': products
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def save_processing_calculation(request):
+    """AJAX endpoint: processing kalkulyatori natijalarini saqlash"""
+    try:
+        # JSON parse qilish
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Неверный формат данных JSON'
+            }, status=400)
+        
+        # Ma'lumotlarni olish
+        calculation_date_str = data.get('calculation_date')
+        sale_price = Decimal(str(data.get('sale_price', 0)))
+        materials = data.get('materials', [])
+        total_percentage = float(data.get('total_percentage', 0))
+        total_octane_percent = float(data.get('total_octane_percent', 0))
+        total_cost = Decimal(str(data.get('total_cost', 0)))
+        total_profit = Decimal(str(data.get('total_profit', 0)))
+        notes = data.get('notes', '').strip()
+        
+        # Validatsiya
+        if not calculation_date_str:
+            return JsonResponse({
+                'success': False,
+                'error': 'Дата не указана'
+            }, status=400)
+        
+        if not materials or len(materials) == 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'Нет материалов для сохранения'
+            }, status=400)
+        
+        # Sana formatini o'zgartirish
+        from datetime import datetime
+        try:
+            calculation_date = datetime.strptime(calculation_date_str, '%Y-%m-%d').date()
+        except ValueError as e:
+            logger.error(f"Date parse error: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Неверный формат даты: {calculation_date_str}'
+            }, status=400)
+        
+        # Bazaga saqlash
+        try:
+            # Model mavjudligini tekshirish
+            if not hasattr(ProcessingCalculation, '_meta'):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Модель ProcessingCalculation не найдена. Выполните миграции: python manage.py migrate'
+                }, status=500)
+            
+            calculation = ProcessingCalculation.objects.create(
+                calculation_date=calculation_date,
+                sale_price=sale_price,
+                materials=materials,
+                total_percentage=total_percentage,
+                total_octane_percent=total_octane_percent,
+                total_cost=total_cost,
+                total_profit=total_profit,
+                notes=notes
+            )
+        except Exception as db_error:
+            error_msg = str(db_error)
+            logger.error(f"Database error: {error_msg}", exc_info=True)
+            
+            # Migration muammosi bo'lsa
+            if 'no such table' in error_msg.lower() or 'does not exist' in error_msg.lower():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Таблица не найдена. Выполните миграции: python manage.py migrate'
+                }, status=500)
+            
+            return JsonResponse({
+                'success': False,
+                'error': f'Ошибка базы данных: {error_msg}'
+            }, status=500)
+        
+        return JsonResponse({
+            'success': True,
+            'calculation_id': calculation.id,
+            'message': 'Расчет успешно сохранен!'
+        })
+        
+    except Exception as e:
+        logger.error(f"Ошибка сохранения расчета переработки: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'error': f'Ошибка при сохранении: {str(e)}'
+        }, status=500)
 
 
 def calculator_selector(request):

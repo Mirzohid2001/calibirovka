@@ -663,3 +663,76 @@ class SavedProductConfiguration(models.Model):
     def products_count(self):
         """Productlar soni"""
         return len(self.products_config) if self.products_config else 0
+
+
+class ProcessingCalculation(models.Model):
+    """Модель для расчетов переработки (Excel'ga o'xshash)"""
+    # Sana va sotish narxi
+    calculation_date = models.DateField(
+        verbose_name="Дата расчета",
+        help_text="Дата расчета"
+    )
+    sale_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        verbose_name="ПРОДАЖА (цена)",
+        help_text="Цена продажи"
+    )
+    
+    # Materiallar (JSON format)
+    materials = models.JSONField(
+        default=list,
+        verbose_name="Материалы",
+        help_text="JSON структура с материалами: [{name, octane, price, percentage, octanePercent, cost}, ...]"
+    )
+    
+    # Umumiy qiymatlar
+    total_percentage = models.FloatField(
+        default=0,
+        verbose_name="Общий процент (%)",
+        help_text="Сумма всех процентов"
+    )
+    total_octane_percent = models.FloatField(
+        default=0,
+        verbose_name="ОКТАН * % (итого)",
+        help_text="Сумма всех ОКТАН * %"
+    )
+    total_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        verbose_name="СЕБЕСТОИМОСТ (итого)",
+        help_text="Сумма всех себестоимостей"
+    )
+    total_profit = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        verbose_name="ПРЫБЛ (прибыль)",
+        help_text="Прибыль = ПРОДАЖА - СЕБЕСТОИМОСТ"
+    )
+    
+    # Mетаданные
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Примечания"
+    )
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Время расчета"
+    )
+
+    class Meta:
+        verbose_name = "Расчет переработки"
+        verbose_name_plural = "Расчеты переработки"
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"Переработка ({self.calculation_date.strftime('%d.%m.%Y')}) - {len(self.materials)} материалов"
+
+    @property
+    def materials_count(self):
+        """Materiallar soni"""
+        return len(self.materials) if self.materials else 0

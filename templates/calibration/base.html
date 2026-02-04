@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Калькулятор перекачки из резервуаров{% endblock %}</title>
     <meta name="theme-color" content="#0d6efd">
     
@@ -47,22 +48,12 @@
                             <li><a class="dropdown-item" href="{% url 'calibration:density_quick_calculator' %}">
                                 <i class="bi bi-lightning-charge me-2"></i>Быстрый калькулятор плотности
                             </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'calibration:product_selection' %}">
-                                <i class="bi bi-fuel-pump me-2"></i>Калькулятор смешивания бензина
-                            </a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}" 
                            href="{% url 'calibration:history' %}">
                             <i class="bi bi-clock-history me-1"></i>История
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'saved_configurations_list' %}active{% endif %}" 
-                           href="{% url 'calibration:saved_configurations_list' %}">
-                            <i class="bi bi-list-ul me-1"></i>Сохраненные
                         </a>
                     </li>
                     <!-- <li class="nav-item">

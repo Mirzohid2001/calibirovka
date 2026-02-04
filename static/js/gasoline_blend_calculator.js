@@ -362,34 +362,72 @@ class GasolineBlendCalculator {
                                 <span class="fs-5 ms-2">${this.formatNumber(variant.total_price)} сум</span>
                             </div>
                         ` : ''}
-                        <h6 class="mt-3 mb-2">
+                        <h6 class="mt-3 mb-3">
                             <i class="bi bi-list-ul me-2"></i>Состав:
                         </h6>
-                        <ul class="list-group">
-                            ${variant.products.map(product => {
-                                const productPrice = product.price_per_kg || product.price_per_liter || 0;
-                                const productWeight = product.weight_kg || product.volume_liters || null;
-                                
-                                return `
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>${this.escapeHtml(product.product_name)}</strong>
-                                        <br>
-                                        <small class="text-muted">
-                                            Октан: <strong>${product.octane}</strong> | 
-                                            Процент: <strong>${product.percentage}%</strong>
-                                        </small>
-                                    </div>
-                                    <div class="text-end">
-                                        <strong class="text-success">${this.formatNumber(productPrice)} сум/кг</strong>
-                                        ${productWeight ? 
-                                            `<br><small class="text-muted">${this.formatNumber(productWeight)} kg</small>` : ''
-                                        }
-                                    </div>
-                                </li>
-                            `;
-                            }).join('')}
-                        </ul>
+                        <!-- Excel jadvaliga o'xshash jadval -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm align-middle" style="font-size: 0.9rem;">
+                                <!-- Header qatori (Excel'ga o'xshash) -->
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th colspan="2" class="text-start">ДАТА</th>
+                                        <th colspan="5" class="text-start">${new Date().toLocaleDateString('ru-RU')}</th>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <th class="text-center" style="width: 5%;">№</th>
+                                        <th style="width: 25%;">НАИМЕНОВАНИЕ СИРЯ</th>
+                                        <th class="text-center" style="width: 10%;">Октан</th>
+                                        <th class="text-end" style="width: 12%;">ЦЕНА</th>
+                                        <th class="text-center" style="width: 10%;">процент %</th>
+                                        <th class="text-center fw-bold" style="width: 12%;">ОКТАН * %</th>
+                                        <th class="text-end fw-bold" style="width: 12%;">СЕБЕСТОИМОСТ</th>
+                                    </tr>
+                                    <!-- Header qatorida umumiy qiymatlar (Excel'ga o'xshash) -->
+                                    <tr class="table-warning fw-bold">
+                                        <td colspan="5"></td>
+                                        <td class="text-center">${variant.final_octane ? variant.final_octane.toFixed(2) : '0.00'}</td>
+                                        <td class="text-end">${variant.final_price ? this.formatNumber(variant.final_price, 2) : '0.00'}</td>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <th colspan="5"></th>
+                                        <th class="text-center fw-bold">ПРОДАЖА (цена)</th>
+                                        <th class="text-end fw-bold">ПРЫБЛ</th>
+                                    </tr>
+                                    <tr class="table-info fw-bold">
+                                        <td colspan="5"></td>
+                                        <td class="text-center">${pricePerKg ? this.formatNumber(pricePerKg, 2) : '0.00'}</td>
+                                        <td class="text-end">
+                                            ${pricePerKg && variant.final_price ? 
+                                                this.formatNumber(pricePerKg - variant.final_price, 2) : 
+                                                '0.00'
+                                            }
+                                        </td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${variant.products.map((product, productIdx) => {
+                                        const productPrice = product.price_per_kg || product.price_per_liter || 0;
+                                        const productOctane = product.octane || 0;
+                                        const productPercentage = product.percentage || 0;
+                                        const octanePercent = (productOctane * productPercentage / 100).toFixed(2);
+                                        const cost = (productPrice * productPercentage / 100).toFixed(2);
+                                        
+                                        return `
+                                        <tr>
+                                            <td class="text-center">${productIdx + 1}</td>
+                                            <td><strong>${this.escapeHtml(product.product_name)}</strong></td>
+                                            <td class="text-center">${productOctane}</td>
+                                            <td class="text-end">${this.formatNumber(productPrice, 2)}</td>
+                                            <td class="text-center">${productPercentage.toFixed(2)}%</td>
+                                            <td class="text-center">${octanePercent}</td>
+                                            <td class="text-end">${this.formatNumber(parseFloat(cost), 2)}</td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                         ${variant.gost_warnings && variant.gost_warnings.length > 0 ? `
                             <div class="alert alert-warning mt-3">
                                 <strong><i class="bi bi-exclamation-triangle me-2"></i>Предупреждения:</strong>

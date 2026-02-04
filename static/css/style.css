@@ -1433,4 +1433,907 @@ footer {
         font-size: 0.75rem;
         padding: 0.6rem 0.75rem;
     }
+}
+
+/* ==========================================
+   PROCESSING CALCULATOR STYLES - IDEAL DESIGN
+   ========================================== */
+
+/* Processing calculator card */
+#processing-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+#processing-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#processing-table thead th {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 0.5rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#processing-table thead tr.table-light th {
+    background: #f8f9fa !important;
+    color: #212529 !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+#processing-table tbody td {
+    padding: 0.75rem 0.5rem !important;
+    border: 1px solid #dee2e6 !important;
+    vertical-align: middle;
+    transition: all 0.2s ease;
+}
+
+#processing-table tbody tr {
+    transition: all 0.3s ease;
+    background: white;
+}
+
+#processing-table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(13, 110, 253, 0.05) 0%, rgba(13, 110, 253, 0.02) 100%) !important;
+    transform: scale(1.001);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#processing-table tbody tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+#processing-table tbody tr:nth-child(even):hover {
+    background: linear-gradient(90deg, rgba(13, 110, 253, 0.08) 0%, rgba(13, 110, 253, 0.04) 100%) !important;
+}
+
+/* Header summary rows */
+#processing-table thead tr.table-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%) !important;
+    color: #212529 !important;
+    font-weight: 700 !important;
+}
+
+#processing-table thead tr.table-warning td {
+    border: 2px solid #ffc107 !important;
+    font-size: 1rem !important;
+    padding: 0.85rem 0.5rem !important;
+}
+
+#processing-table thead tr.table-info {
+    background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
+    color: white !important;
+    font-weight: 700 !important;
+}
+
+#processing-table thead tr.table-info td {
+    border: 2px solid #0dcaf0 !important;
+    font-size: 1rem !important;
+    padding: 0.85rem 0.5rem !important;
+}
+
+/* Input fields in table */
+#processing-table tbody input.form-control-sm {
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background: white;
+    font-weight: 500;
+}
+
+#processing-table tbody input.form-control-sm:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    background: #f8f9ff;
+    transform: scale(1.02);
+}
+
+#processing-table tbody input.form-control-sm:hover {
+    border-color: #0d6efd;
+}
+
+/* Delete button in table */
+#processing-table tbody .btn-outline-danger {
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+
+#processing-table tbody .btn-outline-danger:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Statistics cards */
+.card.bg-light {
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    position: relative;
+}
+
+.card.bg-light::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.card.bg-light:hover::before {
+    left: 100%;
+}
+
+.card.bg-light:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #0d6efd;
+}
+
+.card.bg-light .card-body {
+    padding: 1.25rem;
+    position: relative;
+    z-index: 1;
+}
+
+.card.bg-light h6 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+    color: #6c757d;
+}
+
+.card.bg-light h4 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card.bg-light:hover h4 {
+    transform: scale(1.1);
+}
+
+/* Processing calculator main card */
+.card.shadow-lg {
+    border-radius: 16px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s ease;
+}
+
+.card.shadow-lg:hover {
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-header.bg-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%) !important;
+    border: none;
+    padding: 1.25rem 1.5rem !important;
+}
+
+.card-header.bg-primary h4 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+}
+
+/* Buttons in header */
+.card-header .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid transparent;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-header .btn-light {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.card-header .btn-light:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+}
+
+.card-header .btn-success {
+    background: linear-gradient(135deg, #198754 0%, #157347 100%);
+    border-color: #198754;
+}
+
+.card-header .btn-success:hover {
+    background: linear-gradient(135deg, #157347 0%, #0f5132 100%);
+    border-color: #157347;
+}
+
+/* Form controls */
+.form-control-lg {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control-lg:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    background: #f8f9ff;
+    transform: translateY(-2px);
+}
+
+.form-control-lg:hover {
+    border-color: #0d6efd;
+}
+
+.form-label.fw-bold {
+    font-size: 1rem;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-label.fw-bold i {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+    color: #0d6efd;
+}
+
+/* Export button */
+#export-excel-btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+#export-excel-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+#export-excel-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+#export-excel-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
+}
+
+#export-excel-btn:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+/* Modal enhancements */
+#addMaterialModal .modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+#addMaterialModal .modal-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%) !important;
+    border: none;
+    padding: 1.25rem 1.5rem;
+}
+
+#addMaterialModal .modal-header h5 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#addMaterialModal .modal-body {
+    padding: 1.5rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+#addMaterialModal .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+#addMaterialModal .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+#addMaterialModal .modal-footer {
+    border-top: 2px solid #e9ecef;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+}
+
+#addMaterialModal .modal-footer .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+#addMaterialModal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+#addMaterialModal .modal-footer .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
+}
+
+/* Remaining percentage indicator */
+#remaining-percentage {
+    display: block;
+    margin-top: 0.5rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+#remaining-percentage.text-danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+#remaining-percentage.text-warning {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+#remaining-percentage.text-muted {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Empty state */
+#materials-tbody tr td.text-center.text-muted {
+    padding: 3rem 1rem !important;
+    font-size: 1rem;
+    font-style: italic;
+}
+
+#materials-tbody tr td.text-center.text-muted i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+/* Responsive improvements for processing calculator */
+@media (max-width: 768px) {
+    #processing-table {
+        font-size: 0.8rem;
+    }
+    
+    #processing-table thead th,
+    #processing-table tbody td {
+        padding: 0.5rem 0.25rem !important;
+    }
+    
+    #processing-table tbody input.form-control-sm {
+        width: 100% !important;
+        font-size: 0.8rem;
+        padding: 0.3rem 0.4rem;
+    }
+    
+    .card.bg-light .card-body {
+        padding: 1rem;
+    }
+    
+    .card.bg-light h4 {
+        font-size: 1.5rem;
+    }
+    
+    .card-header.bg-primary h4 {
+        font-size: 1.2rem;
+    }
+    
+    .card-header .btn {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.75rem;
+    }
+}
+
+/* Print styles for processing calculator */
+@media print {
+    #processing-table {
+        box-shadow: none;
+        border: 2px solid #000;
+    }
+    
+    .card-header,
+    .btn,
+    #add-material-btn,
+    #clear-all-btn,
+    #export-excel-btn {
+        display: none !important;
+    }
+    
+    #processing-table tbody input {
+        border: none !important;
+        background: transparent !important;
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
+    }
+}
+
+/* Animations for processing calculator */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#processing-table tbody tr {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Loading state for inputs */
+#processing-table tbody input:disabled {
+    background: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Success state for rows */
+#processing-table tbody tr.success-row {
+    background: linear-gradient(90deg, rgba(25, 135, 84, 0.1) 0%, rgba(25, 135, 84, 0.05) 100%) !important;
+    border-left: 4px solid #198754;
+}
+
+/* Warning state for rows */
+#processing-table tbody tr.warning-row {
+    background: linear-gradient(90deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%) !important;
+    border-left: 4px solid #ffc107;
+}
+
+/* Tooltip styles */
+[title] {
+    cursor: help;
+    position: relative;
+}
+
+/* Smooth number transitions */
+#total-percentage-display,
+#total-octane-display,
+#total-cost-display,
+#total-profit-display {
+    transition: all 0.3s ease;
+}
+
+#total-percentage-display:hover,
+#total-octane-display:hover,
+#total-cost-display:hover,
+#total-profit-display:hover {
+    transform: scale(1.1);
+}
+
+/* Table row number styling */
+#processing-table tbody td:first-child {
+    font-weight: 600;
+    color: #6c757d;
+    background: #f8f9fa;
+}
+
+/* Material name styling */
+#processing-table tbody td:nth-child(2) {
+    font-weight: 600;
+    color: #212529;
+}
+
+/* Calculated values styling */
+#processing-table tbody td:nth-child(6),
+#processing-table tbody td:nth-child(7) {
+    font-weight: 700;
+    color: #0d6efd;
+    background: rgba(13, 110, 253, 0.05);
+}
+
+/* Header summary values */
+#processing-table thead tr.table-warning td,
+#processing-table thead tr.table-info td {
+    font-size: 1.1rem !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Date display styling */
+#date-display {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Empty table message enhancement */
+#materials-tbody tr td.text-center.text-muted {
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.8) 100%);
+    border-radius: 12px;
+    margin: 1rem;
+}
+
+/* Responsive table improvements */
+@media (max-width: 768px) {
+    .table-responsive {
+        border-radius: 12px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+        position: relative;
+    }
+    
+    
+    #processing-table {
+        min-width: 650px;
+    }
+    
+    #processing-table thead th,
+    #processing-table tbody td {
+        padding: 0.4rem 0.3rem !important;
+    }
+    
+    #processing-table tbody input.form-control-sm {
+        font-size: 0.75rem !important;
+        padding: 0.3rem 0.4rem !important;
+    }
+    
+    .card.bg-light {
+        margin-bottom: 1rem;
+    }
+    
+    /* Calculator icon responsive */
+    .calculator-icon {
+        font-size: 3rem !important;
+    }
+    
+    /* Title responsive */
+    .display-5-md {
+        font-size: 2rem !important;
+    }
+    
+    /* Lead text responsive */
+    .fs-6-md {
+        font-size: 0.95rem !important;
+    }
+    
+    /* Card body padding */
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    /* Form controls */
+    .form-control-lg {
+        font-size: 1rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    /* Buttons */
+    .btn-lg {
+        font-size: 0.9rem !important;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    /* Statistics cards */
+    .card.bg-light .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    .card.bg-light h3 {
+        font-size: 1.25rem !important;
+    }
+    
+    .card.bg-light h6 {
+        font-size: 0.75rem !important;
+    }
+    
+    .card.bg-light .bi {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* Extra small devices (phones, less than 576px) */
+@media (max-width: 575.98px) {
+    .calculator-icon {
+        font-size: 2.5rem !important;
+    }
+    
+    .display-5-md {
+        font-size: 1.75rem !important;
+    }
+    
+    .fs-6-md {
+        font-size: 0.875rem !important;
+    }
+    
+    /* Card header */
+    .card-header.bg-primary {
+        padding: 0.75rem !important;
+    }
+    
+    .card-header.bg-primary h4 {
+        font-size: 1rem !important;
+    }
+    
+    /* Input fields */
+    .form-control-lg {
+        font-size: 0.9rem !important;
+        padding: 0.4rem 0.6rem !important;
+    }
+    
+    /* Buttons in header */
+    .card-header .btn-sm {
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+    
+    /* Table - Mobile optimization */
+    .table-responsive {
+        margin: 0 -0.75rem;
+        padding: 0 0.75rem;
+        border-radius: 8px;
+    }
+    
+    /* Sticky header for mobile */
+    .table-responsive {
+        position: relative;
+    }
+    
+    #processing-table {
+        font-size: 0.65rem !important;
+        min-width: 580px !important;
+    }
+    
+    /* Sticky header */
+    #processing-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+    }
+    
+    #processing-table thead tr.table-primary {
+        background: #0d6efd !important;
+    }
+    
+    #processing-table thead th,
+    #processing-table tbody td {
+        padding: 0.35rem 0.25rem !important;
+        white-space: nowrap;
+    }
+    
+    /* Column widths for mobile - optimized */
+    #processing-table thead th:nth-child(1),
+    #processing-table tbody td:nth-child(1) {
+        width: 3.5% !important;
+        min-width: 28px;
+        max-width: 35px;
+    }
+    
+    #processing-table thead th:nth-child(2),
+    #processing-table tbody td:nth-child(2) {
+        width: 16% !important;
+        min-width: 90px;
+        max-width: 120px;
+        font-size: 0.6rem !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    #processing-table thead th:nth-child(3),
+    #processing-table tbody td:nth-child(3) {
+        width: 7.5% !important;
+        min-width: 55px;
+        max-width: 65px;
+    }
+    
+    #processing-table thead th:nth-child(4),
+    #processing-table tbody td:nth-child(4) {
+        width: 9% !important;
+        min-width: 65px;
+        max-width: 75px;
+    }
+    
+    #processing-table thead th:nth-child(5),
+    #processing-table tbody td:nth-child(5) {
+        width: 7.5% !important;
+        min-width: 55px;
+        max-width: 65px;
+    }
+    
+    #processing-table thead th:nth-child(6),
+    #processing-table tbody td:nth-child(6) {
+        width: 11% !important;
+        min-width: 75px;
+        max-width: 85px;
+    }
+    
+    #processing-table thead th:nth-child(7),
+    #processing-table tbody td:nth-child(7) {
+        width: 11% !important;
+        min-width: 75px;
+        max-width: 85px;
+    }
+    
+    /* Input fields - larger for touch */
+    #processing-table tbody input.form-control-sm {
+        font-size: 0.8rem !important;
+        padding: 0.45rem 0.35rem !important;
+        width: 100% !important;
+        min-height: 38px; /* Touch-friendly size */
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
+        border: 2px solid #dee2e6;
+        border-radius: 4px;
+    }
+    
+    #processing-table tbody input.form-control-sm:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+        outline: none;
+    }
+    
+    /* Prevent zoom on input focus (iOS) - only for main inputs */
+    @media (max-width: 575.98px) {
+        input[type="number"].form-control-lg,
+        input[type="date"].form-control-lg {
+            font-size: 16px !important; /* Prevents zoom on iOS */
+        }
+        
+        /* Table inputs - keep smaller but touch-friendly */
+        #processing-table tbody input[type="number"] {
+            font-size: 0.8rem !important;
+            min-height: 38px;
+        }
+    }
+    
+    /* Header rows - make text smaller */
+    #processing-table thead tr:first-child th {
+        font-size: 0.6rem !important;
+        padding: 0.3rem 0.2rem !important;
+    }
+    
+    #processing-table thead tr.table-warning td,
+    #processing-table thead tr.table-info td {
+        font-size: 0.65rem !important;
+        padding: 0.35rem 0.2rem !important;
+    }
+    
+    #processing-table thead tr.table-light th {
+        font-size: 0.6rem !important;
+        padding: 0.35rem 0.2rem !important;
+        line-height: 1.2;
+    }
+    
+    /* Shorten column headers for mobile */
+    #processing-table thead tr.table-light th:nth-child(2)::after {
+        content: '';
+    }
+    
+    /* Date display */
+    #date-display {
+        font-size: 0.6rem !important;
+    }
+    
+    /* Statistics cards */
+    .card.bg-light .card-body {
+        padding: 0.5rem !important;
+    }
+    
+    .card.bg-light h3 {
+        font-size: 1rem !important;
+    }
+    
+    .card.bg-light h6 {
+        font-size: 0.7rem !important;
+    }
+    
+    .card.bg-light .bi {
+        font-size: 1.25rem !important;
+    }
+    
+    /* Container padding */
+    .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    /* Card body padding */
+    .card-body {
+        padding: 0.75rem !important;
+    }
+    
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .calculator-icon {
+        font-size: 3.5rem !important;
+    }
+    
+    .display-5-md {
+        font-size: 2.25rem !important;
+    }
+    
+    #processing-table {
+        min-width: 750px;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .calculator-icon {
+        font-size: 3.75rem !important;
+    }
+    
+    #processing-table {
+        min-width: 900px;
+    }
+    
+    .card-body {
+        padding: 1.5rem !important;
+    }
 } 
