@@ -2414,6 +2414,207 @@ def save_processing_calculation(request):
         }, status=500)
 
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def export_processing_excel(request):
+    """Excel ga processing kalkulyatori natijalarini eksport qilish - chiroyli ranglar va formatlar bilan"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from django.http import HttpResponse
+        import json
+        from datetime import datetime
+        
+        data = json.loads(request.body)
+        calculation_date_str = data.get('calculation_date', '')
+        sale_price = float(data.get('sale_price', 0))
+        materials = data.get('materials', [])
+        total_percentage = float(data.get('total_percentage', 0))
+        total_octane_percent = float(data.get('total_octane_percent', 0))
+        total_cost = float(data.get('total_cost', 0))
+        total_profit = float(data.get('total_profit', 0))
+        
+        if not materials or len(materials) == 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'Нет данных для экспорта'
+            }, status=400)
+        
+        # Workbook yaratish
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Переработка"
+        
+        # Uslublar - chiroyli ranglar
+        date_header_font = Font(bold=True, color="FFFFFF", size=14)
+        date_header_fill = PatternFill(start_color="198754", end_color="157347", fill_type="solid")  # Yashil
+        
+        header_font = Font(bold=True, color="FFFFFF", size=12)
+        header_fill = PatternFill(start_color="0d6efd", end_color="0b5ed7", fill_type="solid")  # Ko'k
+        
+        total_row_font = Font(bold=True, size=12, color="000000")
+        total_row_fill = PatternFill(start_color="ffc107", end_color="ffb300", fill_type="solid")  # Sariq
+        
+        sale_row_font = Font(bold=True, size=12, color="FFFFFF")
+        sale_row_fill = PatternFill(start_color="0dcaf0", end_color="0aa2c0", fill_type="solid")  # Moviy
+        
+        profit_positive_fill = PatternFill(start_color="d1e7dd", end_color="badbcc", fill_type="solid")  # Yashil (yengil)
+        profit_negative_fill = PatternFill(start_color="f8d7da", end_color="f5c2c7", fill_type="solid")  # Qizil (yengil)
+        
+        border = Border(
+            left=Side(style='thin', color='000000'),
+            right=Side(style='thin', color='000000'),
+            top=Side(style='thin', color='000000'),
+            bottom=Side(style='thin', color='000000')
+        )
+        
+        # Sana formatini o'zgartirish
+        if calculation_date_str:
+            try:
+                date_obj = datetime.strptime(calculation_date_str, '%Y-%m-%d')
+                date_display = date_obj.strftime('%d.%m.%Y')
+            except:
+                date_display = calculation_date_str
+        else:
+            date_display = datetime.now().strftime('%d.%m.%Y')
+        
+        # Sana qatori (A1-B1) - YASHIL
+        ws.merge_cells('A1:B1')
+        ws['A1'] = 'ДАТА'
+        ws['A1'].font = date_header_font
+        ws['A1'].fill = date_header_fill
+        ws['A1'].alignment = Alignment(horizontal='left', vertical='center')
+        ws['A1'].border = border
+        
+        ws.merge_cells('C1:I1')
+        ws['C1'] = date_display
+        ws['C1'].font = date_header_font
+        ws['C1'].fill = date_header_fill
+        ws['C1'].alignment = Alignment(horizontal='left', vertical='center')
+        ws['C1'].border = border
+        
+        # Ustunlar sarlavhasi (2-qator) - KO'K
+        headers = ['№', 'НАИМЕНОВАНИЕ СИРЯ', 'Октан', 'ЦЕНА ($)', 'процент %', 'ОКТАН * %', 'СЕБЕСТОИМОСТ ($)', 'ПРОДАЖА (цена, $)', 'ПРЫБЛ ($)']
+        for col_idx, header in enumerate(headers, start=1):
+            cell = ws.cell(row=2, column=col_idx)
+            cell.value = header
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            cell.border = border
+        
+        # Umumiy qiymatlar qatori (3-qator) - SARIQ
+        ws['A3'] = ''
+        ws['B3'] = ''
+        ws['C3'] = ''
+        ws['D3'] = ''
+        ws['E3'] = ''
+        ws['F3'] = total_octane_percent
+        ws['G3'] = total_cost
+        ws['H3'] = sale_price
+        ws['I3'] = total_profit
+        
+        for col in range(1, 10):
+            cell = ws.cell(row=3, column=col)
+            cell.font = total_row_font
+            cell.fill = total_row_fill
+            cell.alignment = Alignment(horizontal='center' if col <= 5 else 'right', vertical='center')
+            cell.border = border
+            if col >= 6:
+                cell.number_format = '#,##0.00'
+        
+        # Foyda rangini o'zgartirish
+        if total_profit < 0:
+            ws['I3'].fill = profit_negative_fill
+            ws['I3'].font = Font(bold=True, size=12, color="DC3545")
+        else:
+            ws['I3'].fill = profit_positive_fill
+            ws['I3'].font = Font(bold=True, size=12, color="198754")
+        
+        # Materiallar (4-qatordan boshlab)
+        start_row = 4
+        for idx, material in enumerate(materials, start=1):
+            row = start_row + idx - 1
+            
+            ws.cell(row=row, column=1).value = idx
+            ws.cell(row=row, column=2).value = material.get('name', '')
+            ws.cell(row=row, column=3).value = material.get('octane', 0)
+            ws.cell(row=row, column=4).value = material.get('price', 0)
+            ws.cell(row=row, column=5).value = material.get('percentage', 0)
+            ws.cell(row=row, column=6).value = material.get('octanePercent', 0)
+            ws.cell(row=row, column=7).value = material.get('cost', 0)
+            ws.cell(row=row, column=8).value = ''
+            ws.cell(row=row, column=9).value = ''
+            
+            # Formatlash
+            for col in range(1, 10):
+                cell = ws.cell(row=row, column=col)
+                cell.border = border
+                
+                if col == 1:  # №
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+                    cell.font = Font(bold=True)
+                elif col == 2:  # NOMI
+                    cell.alignment = Alignment(horizontal='left', vertical='center')
+                    cell.font = Font(bold=True, size=11)
+                elif col == 3:  # Oktan
+                    cell.alignment = Alignment(horizontal='right', vertical='center')
+                    cell.number_format = '0.0'
+                elif col == 4:  # Narx
+                    cell.alignment = Alignment(horizontal='right', vertical='center')
+                    cell.number_format = '#,##0.00'
+                elif col == 5:  # Foiz
+                    cell.alignment = Alignment(horizontal='right', vertical='center')
+                    cell.number_format = '0.00'
+                elif col == 6:  # Oktan*%
+                    cell.alignment = Alignment(horizontal='right', vertical='center')
+                    cell.font = Font(bold=True, color="0d6efd", size=11)
+                    cell.number_format = '#,##0.00'
+                elif col == 7:  # Sebestoimost
+                    cell.alignment = Alignment(horizontal='right', vertical='center')
+                    cell.font = Font(bold=True, color="ffc107", size=11)
+                    cell.number_format = '#,##0.00'
+            
+            # Qator rangini o'zgartirish (zebra - juft qatorlar yengil rangda)
+            if idx % 2 == 0:
+                for col in range(1, 10):
+                    ws.cell(row=row, column=col).fill = PatternFill(start_color="f8f9fa", end_color="f8f9fa", fill_type="solid")
+        
+        # Ustunlarni kenglashtirish
+        ws.column_dimensions['A'].width = 6
+        ws.column_dimensions['B'].width = 25
+        ws.column_dimensions['C'].width = 10
+        ws.column_dimensions['D'].width = 12
+        ws.column_dimensions['E'].width = 12
+        ws.column_dimensions['F'].width = 14
+        ws.column_dimensions['G'].width = 18
+        ws.column_dimensions['H'].width = 18
+        ws.column_dimensions['I'].width = 14
+        
+        # HTTP response yaratish
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        filename = f"ПЕРЕРАБОТКА_{date_display.replace('.', '_')}_{datetime.now().strftime('%H%M%S')}.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        wb.save(response)
+        return response
+        
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Неверный формат JSON: {str(e)}'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Excel export error: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'error': f'Ошибка экспорта: {str(e)}'
+        }, status=500)
+
+
 def calculator_selector(request):
     """Страница выбора калькулятора"""
     return render(request, 'calibration/calculator_selector.html')

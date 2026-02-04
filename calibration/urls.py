@@ -12,6 +12,7 @@ urlpatterns = [
     path('density-quick/', views.density_quick_calculator, name='density_quick_calculator'),
     path('processing/', views.processing_calculator, name='processing_calculator'),
     path('processing/save/', views.save_processing_calculation, name='save_processing_calculation'),
+    path('processing/export-excel/', views.export_processing_excel, name='export_processing_excel'),
     # Benzin aralashma kalkulyatori o'chirilgan
     # path('gasoline-blend/products/', views.product_selection, name='product_selection'),
     # path('gasoline-blend/', views.gasoline_blend_calculator, name='gasoline_blend_calculator'),

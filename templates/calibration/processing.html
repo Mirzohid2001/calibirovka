@@ -78,6 +78,36 @@
                         </div>
                     </div>
 
+                    <!-- Tanlangan tarkib (alohida ko'rsatish) - TEPADA -->
+                    <div class="card shadow-sm border-0 mb-4" id="selected-composition-card" style="display: none;">
+                        <div class="card-header bg-success text-white py-3">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Выбранный состав
+                            </h5>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm align-middle mb-0" id="selected-composition-table" style="font-size: 0.9rem;">
+                                    <thead class="table-success">
+                                        <tr>
+                                            <th class="text-center" style="width: 5%;">№</th>
+                                            <th style="width: 30%;">НАИМЕНОВАНИЕ СИРЯ</th>
+                                            <th class="text-center" style="width: 12%;">Октан</th>
+                                            <th class="text-end" style="width: 15%;">ЦЕНА ($)</th>
+                                            <th class="text-center" style="width: 12%;">процент %</th>
+                                            <th class="text-center fw-bold" style="width: 13%;">ОКТАН * %</th>
+                                            <th class="text-end fw-bold" style="width: 13%;">СЕБЕСТОИМОСТ ($)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="selected-composition-tbody">
+                                        <!-- Tanlangan mahsulotlar bu yerda ko'rinadi -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Jadval -->
                     <div class="table-responsive shadow-sm position-relative" style="border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
                         <table class="table table-bordered table-sm align-middle mb-0" id="processing-table" style="font-size: 0.9rem;">

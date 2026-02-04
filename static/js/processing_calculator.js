@@ -121,6 +121,9 @@ class ProcessingCalculator {
 
         // Umumiy qiymatlarni yangilash
         this.calculateTotals();
+        
+        // Tanlangan tarkibni yangilash
+        this.updateSelectedComposition();
     }
 
     validateTotalPercentage() {
@@ -195,6 +198,7 @@ class ProcessingCalculator {
 
             document.getElementById('sale-price').value = '';
             this.calculateTotals();
+            this.updateSelectedComposition();
         }
     }
 
@@ -240,6 +244,47 @@ class ProcessingCalculator {
         });
 
         return materials;
+    }
+
+    updateSelectedComposition() {
+        /**
+         * Tanlangan tarkibni alohida jadvalda ko'rsatish
+         */
+        
+        const materials = this.getFilledMaterials();
+        const selectedCard = document.getElementById('selected-composition-card');
+        const selectedTbody = document.getElementById('selected-composition-tbody');
+        
+        if (!selectedCard || !selectedTbody) return;
+        
+        // Agar tanlangan mahsulotlar bo'lsa, ko'rsatish
+        if (materials.length > 0) {
+            selectedCard.style.display = 'block';
+            
+            // Tbody'ni tozalash
+            selectedTbody.innerHTML = '';
+            
+            // Har bir tanlangan mahsulotni qo'shish
+            materials.forEach((material, index) => {
+                const row = document.createElement('tr');
+                row.className = 'table-light';
+                
+                row.innerHTML = `
+                    <td class="text-center">${index + 1}</td>
+                    <td class="fw-semibold">${material.name}</td>
+                    <td class="text-center">${material.octane.toFixed(1).replace('.', ',')}</td>
+                    <td class="text-end">${this.formatNumberDisplay(material.price, 2)}</td>
+                    <td class="text-center">${material.percentage.toFixed(2).replace('.', ',')}%</td>
+                    <td class="text-center fw-bold text-primary">${material.octanePercent.toFixed(2).replace('.', ',')}</td>
+                    <td class="text-end fw-bold text-warning">${this.formatNumberDisplay(material.cost, 2)}</td>
+                `;
+                
+                selectedTbody.appendChild(row);
+            });
+        } else {
+            // Agar tanlangan mahsulotlar bo'lmasa, yashirish
+            selectedCard.style.display = 'none';
+        }
     }
 
     calculateTotals() {
@@ -306,11 +351,14 @@ class ProcessingCalculator {
                 profitDisplayEl.className = 'mb-0 fw-bold text-success';
             }
         }
+        
+        // Tanlangan tarkibni yangilash
+        this.updateSelectedComposition();
     }
 
-    exportToExcel() {
+    async exportToExcel() {
         /**
-         * Excel'ga export qilish
+         * Excel'ga export qilish - server-side (chiroyli ranglar va formatlar bilan)
          */
         
         const materials = this.getFilledMaterials();
@@ -320,47 +368,99 @@ class ProcessingCalculator {
             return;
         }
 
-        // Ma'lumotlarni olish
-        const date = document.getElementById('date-display')?.textContent || new Date().toLocaleDateString('ru-RU');
-        const salePrice = parseFloat(document.getElementById('sale-price')?.value || 0);
-        
-        // Umumiy qiymatlar
-        const totalOctanePercent = materials.reduce((sum, m) => sum + (m.octanePercent || 0), 0);
-        const totalCost = materials.reduce((sum, m) => sum + (m.cost || 0), 0);
-        const profit = salePrice - totalCost;
+        // Loading ko'rsatish
+        const exportBtn = document.getElementById('export-excel-btn');
+        const originalText = exportBtn.innerHTML;
+        exportBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Загрузка...';
+        exportBtn.disabled = true;
 
-        // CSV format (Excel'ga mos)
-        let csv = '\ufeff'; // UTF-8 BOM (kirill harflari uchun)
-        
-        // Sana
-        csv += 'ДАТА,' + date + '\n';
-        
-        // Ustunlar
-        csv += '№,НАИМЕНОВАНИЕ СИРЯ,Октан,ЦЕНА,процент %,ОКТАН * %,СЕБЕСТОИМОСТ,ПРОДАЖА (цена),ПРЫБЛ\n';
-        
-        // Header qatorida umumiy qiymatlar (Excel'ga o'xshash)
-        csv += `,,,,"${totalOctanePercent.toFixed(2).replace('.', ',')}","${totalCost.toFixed(2).replace('.', ',')}","${salePrice.toFixed(2).replace('.', ',')}","${profit.toFixed(2).replace('.', ',')}"\n`;
-        
-        // Materiallar
-        materials.forEach((material, index) => {
-            csv += `${index + 1},"${material.name}",${material.octane},${material.price.toFixed(2).replace('.', ',')},${material.percentage.toFixed(2).replace('.', ',')},${material.octanePercent.toFixed(2).replace('.', ',')},${material.cost.toFixed(2).replace('.', ',')},,\n`;
-        });
+        try {
+            // Ma'lumotlarni olish
+            const dateInput = document.getElementById('calculation-date');
+            const dateValue = dateInput?.value || new Date().toISOString().split('T')[0];
+            const salePrice = parseFloat(document.getElementById('sale-price')?.value || 0);
+            
+            // Umumiy qiymatlar
+            const totalPercentage = materials.reduce((sum, m) => sum + m.percentage, 0);
+            const totalOctanePercent = materials.reduce((sum, m) => sum + (m.octanePercent || 0), 0);
+            const totalCost = materials.reduce((sum, m) => sum + (m.cost || 0), 0);
+            const profit = salePrice - totalCost;
 
-        // Download
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        const fileName = `ПЕРЕРАБОТКА_${date.replace(/\//g, '_').replace(/\./g, '_').replace(/\s/g, '_')}.csv`;
-        link.setAttribute('download', fileName);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        // Xabar
-        alert('✅ Файл успешно экспортирован!\n\nФайл: ' + fileName);
+            // Materiallarni tozalash
+            const materialsData = materials.map(m => ({
+                name: m.name,
+                octane: m.octane,
+                price: m.price,
+                percentage: m.percentage,
+                octanePercent: m.octanePercent,
+                cost: m.cost
+            }));
+
+            // Serverga yuborish
+            const response = await fetch('/processing/export-excel/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCsrfToken()
+                },
+                body: JSON.stringify({
+                    calculation_date: dateValue,
+                    sale_price: salePrice,
+                    materials: materialsData,
+                    total_percentage: totalPercentage,
+                    total_octane_percent: totalOctanePercent,
+                    total_cost: totalCost,
+                    total_profit: profit
+                })
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('Server error:', text);
+                let errorMessage = 'Ошибка при экспорте';
+                try {
+                    const errorData = JSON.parse(text);
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    errorMessage = `Ошибка сервера (${response.status})`;
+                }
+                throw new Error(errorMessage);
+            }
+
+            // Excel faylini yuklab olish
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Fayl nomini olish (Content-Disposition header'dan)
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let fileName = 'ПЕРЕРАБОТКА.xlsx';
+            if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (fileNameMatch) {
+                    fileName = fileNameMatch[1];
+                }
+            }
+            
+            link.download = fileName;
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            // Xabar
+            alert('✅ Файл успешно экспортирован!\n\nФайл: ' + fileName + '\n\n💡 Файл содержит красивое форматирование с цветами!');
+            
+        } catch (error) {
+            console.error('Excel export error:', error);
+            alert('❌ Ошибка при экспорте:\n\n' + error.message);
+        } finally {
+            // Tugmani tiklash
+            exportBtn.innerHTML = originalText;
+            exportBtn.disabled = false;
+        }
     }
 
     async saveCalculation() {

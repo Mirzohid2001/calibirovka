@@ -2336,4 +2336,100 @@ footer {
     .card-body {
         padding: 1.5rem !important;
     }
+}
+
+/* ============================================
+   Tanlangan tarkib jadvali (Selected Composition)
+   ============================================ */
+
+#selected-composition-card {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#selected-composition-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+#selected-composition-table thead th {
+    background: linear-gradient(135deg, #198754 0%, #157347 100%) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 0.75rem 0.5rem !important;
+    border: 1px solid #157347 !important;
+}
+
+#selected-composition-table tbody td {
+    padding: 0.75rem 0.5rem !important;
+    border: 1px solid #dee2e6 !important;
+    vertical-align: middle;
+}
+
+#selected-composition-table tbody tr {
+    transition: all 0.3s ease;
+    background: white;
+}
+
+#selected-composition-table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(25, 135, 84, 0.05) 0%, rgba(25, 135, 84, 0.02) 100%) !important;
+    transform: scale(1.001);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#selected-composition-table tbody tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+#selected-composition-table tbody tr:nth-child(even):hover {
+    background: linear-gradient(90deg, rgba(25, 135, 84, 0.08) 0%, rgba(25, 135, 84, 0.04) 100%) !important;
+}
+
+/* Mobile responsiveness for selected composition table */
+@media (max-width: 768px) {
+    #selected-composition-table {
+        font-size: 0.8rem;
+        min-width: 100%;
+    }
+    
+    #selected-composition-table thead th,
+    #selected-composition-table tbody td {
+        padding: 0.5rem 0.3rem !important;
+        font-size: 0.75rem;
+    }
+    
+    #selected-composition-card .card-header h5 {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    #selected-composition-table {
+        font-size: 0.7rem !important;
+    }
+    
+    #selected-composition-table thead th,
+    #selected-composition-table tbody td {
+        padding: 0.4rem 0.25rem !important;
+        font-size: 0.65rem !important;
+    }
+    
+    #selected-composition-table thead th:nth-child(2),
+    #selected-composition-table tbody td:nth-child(2) {
+        font-size: 0.6rem !important;
+    }
 } 
