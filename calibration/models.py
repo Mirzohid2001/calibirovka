@@ -131,6 +131,11 @@ class Product(models.Model):
         verbose_name="Используется для смешивания",
         help_text="Можно ли использовать этот продукт для создания бензиновых смесей"
     )
+    is_for_processing = models.BooleanField(
+        default=False,
+        verbose_name="Используется для переработки",
+        help_text="Показывать ли этот продукт в калькуляторе переработки"
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Дата создания"

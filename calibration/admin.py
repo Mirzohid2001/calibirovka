@@ -51,10 +51,12 @@ class ProductAdmin(admin.ModelAdmin):
         'name',
         'gost_percentage',
         'is_for_blending',
+        'is_for_processing',
         'created_at'
     ]
     list_filter = [
         'is_for_blending',
+        'is_for_processing',
         'created_at', 
         'updated_at'
     ]
@@ -69,6 +71,12 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': (
                 'gost_percentage',
                 'is_for_blending'
+            )
+        }),
+        ('Использование в калькуляторах', {
+            'description': 'Выберите, в каких калькуляторах показывать этот продукт.',
+            'fields': (
+                'is_for_processing',
             )
         }),
         ('Метаданные', {

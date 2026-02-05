@@ -2310,7 +2310,7 @@ def view_gasoline_blend_history(request, calculation_id):
 
 def processing_calculator(request):
     """Калькулятор переработки (Excel'ga o'xshash)"""
-    products = Product.objects.filter(is_for_blending=True).order_by('name')
+    products = Product.objects.filter(is_for_processing=True).order_by('name')
     return render(request, 'calibration/processing.html', {
         'products': products
     })
