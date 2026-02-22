@@ -226,8 +226,9 @@ class ProcessingCalculator {
             const price = parseFloat(priceInput?.value || 0);
             const percentage = parseFloat(percentageInput?.value || 0);
 
-            // Faqat barcha maydonlar to'ldirilgan bo'lsa qo'shish
-            if (name && octane > 0 && price > 0 && percentage > 0) {
+            // Narx ixtiyoriy: bo'sh bo'lsa 0 deb olinadi
+            // Qator hisobga kirishi uchun oktan va foiz (tonna) kiritilgan bo'lishi kifoya
+            if (name && octane > 0 && percentage > 0) {
                 const octanePercent = (octane * percentage / 100);
                 const cost = (price * percentage / 100);
 
