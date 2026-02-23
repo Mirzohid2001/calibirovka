@@ -66,6 +66,17 @@ class ProcessingCalculator {
                     this.updateProductRow(productId);
                 });
             }
+
+            // Удельный вес input
+            const specificWeightInput = row.querySelector('.material-specific-weight');
+            if (specificWeightInput) {
+                specificWeightInput.addEventListener('input', () => {
+                    this.updateProductRow(productId);
+                });
+                specificWeightInput.addEventListener('change', () => {
+                    this.updateProductRow(productId);
+                });
+            }
             
             // Foiz input
             const percentageInput = row.querySelector('.material-percentage');
@@ -190,10 +201,12 @@ class ProcessingCalculator {
                 const octaneInput = row.querySelector('.material-octane');
                 const priceInput = row.querySelector('.material-price');
                 const percentageInput = row.querySelector('.material-percentage');
+                const specificWeightInput = row.querySelector('.material-specific-weight');
                 
                 if (octaneInput) octaneInput.value = '';
                 if (priceInput) priceInput.value = '';
                 if (percentageInput) percentageInput.value = '';
+                if (specificWeightInput) specificWeightInput.value = '';
             });
 
             document.getElementById('sale-price').value = '';
@@ -221,10 +234,12 @@ class ProcessingCalculator {
             const octaneInput = row.querySelector('.material-octane');
             const priceInput = row.querySelector('.material-price');
             const percentageInput = row.querySelector('.material-percentage');
+            const specificWeightInput = row.querySelector('.material-specific-weight');
 
             const octane = parseFloat(octaneInput?.value || 0);
             const price = parseFloat(priceInput?.value || 0);
             const percentage = parseFloat(percentageInput?.value || 0);
+            const specificWeight = parseFloat(specificWeightInput?.value || 0) || null;
 
             // Narx ixtiyoriy: bo'sh bo'lsa 0 deb olinadi
             // Qator hisobga kirishi uchun oktan va foiz (tonna) kiritilgan bo'lishi kifoya
@@ -236,6 +251,7 @@ class ProcessingCalculator {
                     id: productId,
                     name: name,
                     octane: octane,
+                    specificWeight: specificWeight,
                     price: price,
                     percentage: percentage,
                     octanePercent: octanePercent,
@@ -270,10 +286,12 @@ class ProcessingCalculator {
                 const row = document.createElement('tr');
                 row.className = 'table-light';
                 
+                const specWeightStr = material.specificWeight != null ? material.specificWeight.toFixed(3).replace('.', ',') : '—';
                 row.innerHTML = `
                     <td class="text-center">${index + 1}</td>
                     <td class="fw-semibold">${material.name}</td>
                     <td class="text-center">${material.octane.toFixed(1).replace('.', ',')}</td>
+                    <td class="text-center">${specWeightStr}</td>
                     <td class="text-end">${this.formatNumberDisplay(material.price, 2)}</td>
                     <td class="text-center">${material.percentage.toFixed(2).replace('.', ',')}%</td>
                     <td class="text-center fw-bold text-primary">${material.octanePercent.toFixed(2).replace('.', ',')}</td>
@@ -391,6 +409,7 @@ class ProcessingCalculator {
             const materialsData = materials.map(m => ({
                 name: m.name,
                 octane: m.octane,
+                specificWeight: m.specificWeight,
                 price: m.price,
                 percentage: m.percentage,
                 octanePercent: m.octanePercent,
@@ -501,6 +520,7 @@ class ProcessingCalculator {
         const materialsData = materials.map(m => ({
             name: m.name,
             octane: m.octane,
+            specificWeight: m.specificWeight,
             price: m.price,
             percentage: m.percentage,
             octanePercent: m.octanePercent,

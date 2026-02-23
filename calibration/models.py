@@ -110,6 +110,13 @@ class Product(models.Model):
         help_text="Октановое число продукта (например: 48, 52, 60, 80, 92, 95, 98, 100)",
         validators=[MinValueValidator(0)]
     )
+    specific_weight_kg_per_liter = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name="Удельный вес (кг/л)",
+        help_text="Удельный вес продукта в кг/л (например: 0.74 для бензина, 0.83 для дизеля)",
+        validators=[MinValueValidator(0.0001)]
+    )
     price_per_liter = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -135,6 +142,11 @@ class Product(models.Model):
         default=False,
         verbose_name="Используется для переработки",
         help_text="Показывать ли этот продукт в калькуляторе переработки"
+    )
+    processing_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Порядок в калькуляторе переработки",
+        help_text="Порядок отображения в калькуляторе (1 — первый, 2 — второй и т.д.)"
     )
     created_at = models.DateTimeField(
         auto_now_add=True,

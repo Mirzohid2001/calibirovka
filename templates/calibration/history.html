@@ -490,6 +490,7 @@
                                                                     <tr>
                                                                         <th>Название</th>
                                                                         <th>ОКТАН</th>
+                                                                        <th>Уд. вес</th>
                                                                         <th>Цена</th>
                                                                         <th>%</th>
                                                                         <th>ОКТАН * %</th>
@@ -501,6 +502,7 @@
                                                                     <tr>
                                                                         <td>{{ material.name }}</td>
                                                                         <td>{{ material.octane|floatformat:2 }}</td>
+                                                                        <td>{% if material.specificWeight %}{{ material.specificWeight|floatformat:3 }}{% else %}—{% endif %}</td>
                                                                         <td>{{ material.price|floatformat:2 }}</td>
                                                                         <td>{{ material.percentage|floatformat:2 }}%</td>
                                                                         <td>{{ material.octanePercent|floatformat:2 }}</td>

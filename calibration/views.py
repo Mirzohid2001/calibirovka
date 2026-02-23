@@ -2310,7 +2310,7 @@ def view_gasoline_blend_history(request, calculation_id):
 
 def processing_calculator(request):
     """Калькулятор переработки (Excel'ga o'xshash)"""
-    products = Product.objects.filter(is_for_processing=True).order_by('name')
+    products = Product.objects.filter(is_for_processing=True).order_by('processing_order', 'name')
     return render(request, 'calibration/processing.html', {
         'products': products
     })
@@ -2486,7 +2486,7 @@ def export_processing_excel(request):
         ws['A1'].alignment = Alignment(horizontal='left', vertical='center')
         ws['A1'].border = border
         
-        ws.merge_cells('C1:I1')
+        ws.merge_cells('C1:J1')
         ws['C1'] = date_display
         ws['C1'].font = date_header_font
         ws['C1'].fill = date_header_fill
@@ -2494,7 +2494,7 @@ def export_processing_excel(request):
         ws['C1'].border = border
         
         # Ustunlar sarlavhasi (2-qator) - KO'K
-        headers = ['№', 'НАИМЕНОВАНИЕ СИРЯ', 'Октан', 'ЦЕНА ($)', 'процент %', 'ОКТАН * %', 'СЕБЕСТОИМОСТ ($)', 'ПРОДАЖА (цена, $)', 'ПРЫБЛ ($)']
+        headers = ['№', 'НАИМЕНОВАНИЕ СИРЯ', 'Октан', 'Уд. вес (кг/л)', 'ЦЕНА ($)', 'процент %', 'ОКТАН * %', 'СЕБЕСТОИМОСТ ($)', 'ПРОДАЖА (цена, $)', 'ПРЫБЛ ($)']
         for col_idx, header in enumerate(headers, start=1):
             cell = ws.cell(row=2, column=col_idx)
             cell.value = header
@@ -2509,45 +2509,49 @@ def export_processing_excel(request):
         ws['C3'] = ''
         ws['D3'] = ''
         ws['E3'] = ''
-        ws['F3'] = total_octane_percent
-        ws['G3'] = total_cost
-        ws['H3'] = sale_price
-        ws['I3'] = total_profit
+        ws['F3'] = ''
+        ws['G3'] = total_octane_percent
+        ws['H3'] = total_cost
+        ws['I3'] = sale_price
+        ws['J3'] = total_profit
         
-        for col in range(1, 10):
+        for col in range(1, 11):
             cell = ws.cell(row=3, column=col)
             cell.font = total_row_font
             cell.fill = total_row_fill
-            cell.alignment = Alignment(horizontal='center' if col <= 5 else 'right', vertical='center')
+            cell.alignment = Alignment(horizontal='center' if col <= 6 else 'right', vertical='center')
             cell.border = border
-            if col >= 6:
+            if col >= 7:
                 cell.number_format = '#,##0.00'
         
         # Foyda rangini o'zgartirish
         if total_profit < 0:
-            ws['I3'].fill = profit_negative_fill
-            ws['I3'].font = Font(bold=True, size=12, color="DC3545")
+            ws['J3'].fill = profit_negative_fill
+            ws['J3'].font = Font(bold=True, size=12, color="DC3545")
         else:
-            ws['I3'].fill = profit_positive_fill
-            ws['I3'].font = Font(bold=True, size=12, color="198754")
+            ws['J3'].fill = profit_positive_fill
+            ws['J3'].font = Font(bold=True, size=12, color="198754")
         
         # Materiallar (4-qatordan boshlab)
         start_row = 4
         for idx, material in enumerate(materials, start=1):
             row = start_row + idx - 1
             
+            spec_weight = material.get('specificWeight')
+            spec_weight_val = float(spec_weight) if spec_weight is not None and spec_weight != '' else None
             ws.cell(row=row, column=1).value = idx
             ws.cell(row=row, column=2).value = material.get('name', '')
             ws.cell(row=row, column=3).value = material.get('octane', 0)
-            ws.cell(row=row, column=4).value = material.get('price', 0)
-            ws.cell(row=row, column=5).value = material.get('percentage', 0)
-            ws.cell(row=row, column=6).value = material.get('octanePercent', 0)
-            ws.cell(row=row, column=7).value = material.get('cost', 0)
-            ws.cell(row=row, column=8).value = ''
+            ws.cell(row=row, column=4).value = spec_weight_val if spec_weight_val is not None else ''
+            ws.cell(row=row, column=5).value = material.get('price', 0)
+            ws.cell(row=row, column=6).value = material.get('percentage', 0)
+            ws.cell(row=row, column=7).value = material.get('octanePercent', 0)
+            ws.cell(row=row, column=8).value = material.get('cost', 0)
             ws.cell(row=row, column=9).value = ''
+            ws.cell(row=row, column=10).value = ''
             
             # Formatlash
-            for col in range(1, 10):
+            for col in range(1, 11):
                 cell = ws.cell(row=row, column=col)
                 cell.border = border
                 
@@ -2560,24 +2564,27 @@ def export_processing_excel(request):
                 elif col == 3:  # Oktan
                     cell.alignment = Alignment(horizontal='right', vertical='center')
                     cell.number_format = '0.0'
-                elif col == 4:  # Narx
+                elif col == 4:  # Уд. вес
+                    cell.alignment = Alignment(horizontal='right', vertical='center')
+                    cell.number_format = '0.000'
+                elif col == 5:  # Narx
                     cell.alignment = Alignment(horizontal='right', vertical='center')
                     cell.number_format = '#,##0.00'
-                elif col == 5:  # Foiz
+                elif col == 6:  # Foiz
                     cell.alignment = Alignment(horizontal='right', vertical='center')
                     cell.number_format = '0.00'
-                elif col == 6:  # Oktan*%
+                elif col == 7:  # Oktan*%
                     cell.alignment = Alignment(horizontal='right', vertical='center')
                     cell.font = Font(bold=True, color="0d6efd", size=11)
                     cell.number_format = '#,##0.00'
-                elif col == 7:  # Sebestoimost
+                elif col == 8:  # Sebestoimost
                     cell.alignment = Alignment(horizontal='right', vertical='center')
                     cell.font = Font(bold=True, color="ffc107", size=11)
                     cell.number_format = '#,##0.00'
             
             # Qator rangini o'zgartirish (zebra - juft qatorlar yengil rangda)
             if idx % 2 == 0:
-                for col in range(1, 10):
+                for col in range(1, 11):
                     ws.cell(row=row, column=col).fill = PatternFill(start_color="f8f9fa", end_color="f8f9fa", fill_type="solid")
         
         # Ustunlarni kenglashtirish
@@ -2586,10 +2593,11 @@ def export_processing_excel(request):
         ws.column_dimensions['C'].width = 10
         ws.column_dimensions['D'].width = 12
         ws.column_dimensions['E'].width = 12
-        ws.column_dimensions['F'].width = 14
-        ws.column_dimensions['G'].width = 18
+        ws.column_dimensions['F'].width = 12
+        ws.column_dimensions['G'].width = 14
         ws.column_dimensions['H'].width = 18
-        ws.column_dimensions['I'].width = 14
+        ws.column_dimensions['I'].width = 18
+        ws.column_dimensions['J'].width = 14
         
         # HTTP response yaratish
         response = HttpResponse(

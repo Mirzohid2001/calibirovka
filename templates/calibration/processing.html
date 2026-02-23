@@ -92,12 +92,13 @@
                                     <thead class="table-success">
                                         <tr>
                                             <th class="text-center" style="width: 5%;">№</th>
-                                            <th style="width: 30%;">НАИМЕНОВАНИЕ СИРЯ</th>
-                                            <th class="text-center" style="width: 12%;">Октан</th>
-                                            <th class="text-end" style="width: 15%;">ЦЕНА ($)</th>
-                                            <th class="text-center" style="width: 12%;">процент %</th>
-                                            <th class="text-center fw-bold" style="width: 13%;">ОКТАН * %</th>
-                                            <th class="text-end fw-bold" style="width: 13%;">СЕБЕСТОИМОСТ ($)</th>
+                                            <th style="width: 25%;">НАИМЕНОВАНИЕ СИРЯ</th>
+                                            <th class="text-center" style="width: 10%;">Октан</th>
+                                            <th class="text-center" style="width: 10%;">Уд. вес</th>
+                                            <th class="text-end" style="width: 12%;">ЦЕНА ($)</th>
+                                            <th class="text-center" style="width: 10%;">процент %</th>
+                                            <th class="text-center fw-bold" style="width: 11%;">ОКТАН * %</th>
+                                            <th class="text-end fw-bold" style="width: 12%;">СЕБЕСТОИМОСТ ($)</th>
                                         </tr>
                                     </thead>
                                     <tbody id="selected-composition-tbody">
@@ -115,7 +116,7 @@
                             <thead class="table-primary">
                                 <tr>
                                     <th colspan="2" class="text-start">ДАТА</th>
-                                    <th colspan="7" class="text-start" id="date-display"></th>
+                                    <th colspan="8" class="text-start" id="date-display"></th>
                                 </tr>
                                 <tr class="table-light">
                                     <th class="text-center" style="width: 5%;">№</th>
@@ -124,6 +125,10 @@
                                         <span class="d-md-none">НАИМЕНОВ.</span>
                                     </th>
                                     <th class="text-center" style="width: 10%;">Октан</th>
+                                    <th class="text-center" style="width: 10%;">
+                                        <span class="d-none d-md-inline">Уд. вес (кг/л)</span>
+                                        <span class="d-md-none">Уд. вес</span>
+                                    </th>
                                     <th class="text-end" style="width: 12%;">
                                         <span class="d-none d-md-inline">ЦЕНА ($)</span>
                                         <span class="d-md-none">ЦЕНА</span>
@@ -143,12 +148,12 @@
                                 </tr>
                                 <!-- Header qatorida umumiy qiymatlar -->
                                 <tr class="table-warning fw-bold">
-                                    <td colspan="5"></td>
+                                    <td colspan="6"></td>
                                     <td class="text-center" id="total-octane-percent">0.00</td>
                                     <td class="text-end" id="total-cost">0.00</td>
                                 </tr>
                                 <tr class="table-light">
-                                    <th colspan="5"></th>
+                                    <th colspan="6"></th>
                                     <th class="text-center fw-bold">
                                         <span class="d-none d-md-inline">ПРОДАЖА (цена, $)</span>
                                         <span class="d-md-none">ПРОДАЖА</span>
@@ -159,7 +164,7 @@
                                     </th>
                                 </tr>
                                 <tr class="table-info fw-bold">
-                                    <td colspan="5"></td>
+                                    <td colspan="6"></td>
                                     <td class="text-center" id="header-sale-price">0.00</td>
                                     <td class="text-end" id="header-profit">0.00</td>
                                 </tr>
@@ -176,8 +181,17 @@
                                                data-product-id="{{ product.id }}"
                                                step="0.1" 
                                                min="0" 
-                                               placeholder="{{ product.octane_number|default:0 }}"
-                                               value="{{ product.octane_number|default:'' }}">
+                                               placeholder="—"
+                                               value="{{ product.octane_number|default_if_none:'' }}">
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="number" 
+                                               class="form-control form-control-sm text-center material-specific-weight" 
+                                               data-product-id="{{ product.id }}"
+                                               step="0.001" 
+                                               min="0" 
+                                               placeholder="—"
+                                               value="{{ product.specific_weight_kg_per_liter|default_if_none:'' }}">
                                     </td>
                                     <td class="text-end">
                                         <input type="number" 
@@ -201,7 +215,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="8" class="text-center text-muted py-4">
                                         <i class="bi bi-info-circle me-2"></i>
                                         Нет продуктов в базе данных. Добавьте продукты в админ-панели.
                                     </td>

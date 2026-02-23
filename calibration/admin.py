@@ -49,11 +49,15 @@ class TankAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = [
         'name',
+        'octane_number',
+        'specific_weight_kg_per_liter',
+        'processing_order',
         'gost_percentage',
         'is_for_blending',
         'is_for_processing',
         'created_at'
     ]
+    list_editable = ['processing_order']
     list_filter = [
         'is_for_blending',
         'is_for_processing',
@@ -66,17 +70,22 @@ class ProductAdmin(admin.ModelAdmin):
         ('Информация о продукте', {
             'fields': ('name', 'description')
         }),
+        ('Параметры для калькулятора переработки', {
+            'description': 'Октановое число и удельный вес используются в калькуляторе переработки как значения по умолчанию. Пользователь может изменить их при расчете.',
+            'fields': ('octane_number', 'specific_weight_kg_per_liter')
+        }),
         ('Параметры бензиновой смеси (GOST)', {
-            'description': 'Октановое число и цена вводятся в интерфейсе калькулятора при каждом расчете. Здесь указывается только GOST процент использования продукта.',
+            'description': 'Цена вводится в интерфейсе калькулятора при каждом расчете. Здесь указывается GOST процент использования продукта.',
             'fields': (
                 'gost_percentage',
                 'is_for_blending'
             )
         }),
         ('Использование в калькуляторах', {
-            'description': 'Выберите, в каких калькуляторах показывать этот продукт.',
+            'description': 'Выберите, в каких калькуляторах показывать этот продукт. Порядок определяет последовательность в калькуляторе переработки.',
             'fields': (
                 'is_for_processing',
+                'processing_order',
             )
         }),
         ('Метаданные', {
