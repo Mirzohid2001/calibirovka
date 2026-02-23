@@ -34,6 +34,15 @@ class ProcessingCalculator {
         // Jadvaldagi barcha input'larni event listener qo'shish
         this.attachInputListeners();
 
+        // Scroll hint - mobilda bir marta scroll qilgandan keyin yashirish
+        const tableWrapper = document.querySelector('.processing-table-wrapper');
+        const scrollHint = document.getElementById('scroll-hint');
+        if (tableWrapper && scrollHint) {
+            tableWrapper.addEventListener('scroll', () => {
+                scrollHint.classList.add('scroll-hint-hidden');
+            }, { once: true });
+        }
+
         // Boshlang'ich hisob-kitoblar
         this.calculateTotals();
     }

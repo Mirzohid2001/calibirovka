@@ -2218,12 +2218,12 @@ footer {
         max-width: 85px;
     }
     
-    /* Input fields - larger for touch */
+    /* Input fields - larger for touch (44px min per Apple HIG) */
     #processing-table tbody input.form-control-sm {
-        font-size: 0.8rem !important;
-        padding: 0.45rem 0.35rem !important;
+        font-size: 0.85rem !important;
+        padding: 0.5rem 0.35rem !important;
         width: 100% !important;
-        min-height: 38px; /* Touch-friendly size */
+        min-height: 44px !important;
         -webkit-appearance: none;
         -moz-appearance: textfield;
         border: 2px solid #dee2e6;
@@ -2243,10 +2243,10 @@ footer {
             font-size: 16px !important; /* Prevents zoom on iOS */
         }
         
-        /* Table inputs - keep smaller but touch-friendly */
+        /* Table inputs - touch-friendly 44px (Apple guideline) */
         #processing-table tbody input[type="number"] {
-            font-size: 0.8rem !important;
-            min-height: 38px;
+            font-size: 0.85rem !important;
+            min-height: 44px !important;
         }
     }
     
@@ -2335,6 +2335,149 @@ footer {
     
     .card-body {
         padding: 1.5rem !important;
+    }
+}
+
+/* ============================================
+   Mobil telefon optimizatsiyasi (Shef uchun)
+   ============================================ */
+
+/* iOS zoom oldini olish - 16px minimum */
+.input-no-zoom {
+    font-size: 16px !important;
+}
+
+/* Touch uchun minimum 44px (Apple guideline) */
+.min-touch-target {
+    min-height: 44px !important;
+}
+
+/* Scroll hint - mobilda */
+.scroll-hint {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    color: #6c757d;
+    background: rgba(255,255,255,0.95);
+    padding: 4px 10px;
+    border-radius: 20px;
+    z-index: 50;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.scroll-hint-hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Processing page - qisqa ekranlar uchun */
+@media (max-width: 480px) {
+    .processing-calculator-page .container {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+        max-width: 100%;
+    }
+    
+    .processing-calculator-page .card-body {
+        padding: 0.5rem !important;
+    }
+    
+    .processing-calculator-page .text-center.mb-4 {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .processing-calculator-page h1.display-4 {
+        font-size: 1.4rem !important;
+    }
+    
+    .processing-calculator-page .row.g-2 .col-6 {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+    
+    .processing-calculator-page .btn-lg {
+        padding: 10px 12px;
+        font-size: 0.95rem;
+    }
+    
+    /* Statistikalar - 2x2 compact */
+    .processing-calculator-page .card.bg-light .card-body {
+        padding: 0.4rem !important;
+    }
+    
+    .processing-calculator-page .card.bg-light h3 {
+        font-size: 0.95rem !important;
+    }
+    
+    .processing-calculator-page .card.bg-light h6 {
+        font-size: 0.6rem !important;
+    }
+    
+    .processing-calculator-page .card.bg-light .bi {
+        font-size: 1.1rem !important;
+    }
+    
+    .processing-calculator-page .row.mt-5.g-3 {
+        margin-top: 1rem !important;
+    }
+    
+    .processing-calculator-page .table-responsive {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
+/* Safe area - notched telefonlar uchun */
+@supports (padding: max(0px)) {
+    .processing-calculator-page {
+        padding-left: max(0.5rem, env(safe-area-inset-left));
+        padding-right: max(0.5rem, env(safe-area-inset-right));
+    }
+}
+
+/* Jadval - sticky birinchi 2 ustun (№ va nom) gorizontal scroll paytida */
+@media (max-width: 767.98px) {
+    #processing-table thead th:nth-child(1),
+    #processing-table thead th:nth-child(2),
+    #processing-table tbody td:nth-child(1),
+    #processing-table tbody td:nth-child(2) {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background: white !important;
+        box-shadow: 2px 0 4px rgba(0,0,0,0.08);
+    }
+    
+    #processing-table thead tr.table-primary th:nth-child(1),
+    #processing-table thead tr.table-primary th:nth-child(2) {
+        background: #0d6efd !important;
+        color: white !important;
+    }
+    
+    #processing-table thead tr.table-light th:nth-child(1),
+    #processing-table thead tr.table-light th:nth-child(2) {
+        background: #e9ecef !important;
+    }
+    
+    #processing-table tbody tr:nth-child(even) td:nth-child(1),
+    #processing-table tbody tr:nth-child(even) td:nth-child(2) {
+        background: #f8f9fa !important;
+    }
+}
+
+/* 8-ustunli jadval uchun nth-child yangilanishi (Уд. вес qo'shilgach) */
+@media (max-width: 575.98px) {
+    #processing-table thead th:nth-child(8),
+    #processing-table tbody td:nth-child(8) {
+        width: 10% !important;
+        min-width: 70px;
+        max-width: 85px;
     }
 }
 

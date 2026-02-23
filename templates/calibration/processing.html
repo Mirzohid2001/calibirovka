@@ -5,7 +5,7 @@
 {% block title %}Калькулятор переработки - Калькуляторы резервуаров{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4 processing-calculator-page">
     <div class="row justify-content-center">
         <div class="col-lg-12">
             <!-- Sarlavha -->
@@ -43,37 +43,34 @@
                 </div>
                 <div class="card-body p-4">
                     <!-- Sana va sotish narxi -->
-                    <div class="row mb-4 g-3">
-                        <div class="col-12 col-md-4">
-                            <label for="calculation-date" class="form-label fw-bold">
-                                <i class="bi bi-calendar me-2"></i>ДАТА:
+                    <div class="row mb-3 mb-md-4 g-2 g-md-3">
+                        <div class="col-6 col-md-4">
+                            <label for="calculation-date" class="form-label fw-bold mb-1 mb-md-2">
+                                <i class="bi bi-calendar me-1 me-md-2"></i><span class="d-none d-sm-inline">ДАТА:</span>
                             </label>
                             <input type="date" 
-                                   class="form-control form-control-lg" 
+                                   class="form-control form-control-lg input-no-zoom" 
                                    id="calculation-date" 
                                    value="">
                         </div>
-                        <div class="col-12 col-md-4">
-                            <label for="sale-price" class="form-label fw-bold">
-                                <i class="bi bi-currency-dollar me-2"></i>ПРОДАЖА (цена, $):
+                        <div class="col-6 col-md-4">
+                            <label for="sale-price" class="form-label fw-bold mb-1 mb-md-2">
+                                <i class="bi bi-currency-dollar me-1 me-md-2"></i><span class="d-none d-sm-inline">ПРОДАЖА:</span>
                             </label>
                             <input type="number" 
-                                   class="form-control form-control-lg" 
+                                   class="form-control form-control-lg input-no-zoom" 
                                    id="sale-price" 
                                    placeholder="0.00"
                                    step="0.01"
-                                   min="0">
+                                   min="0"
+                                   inputmode="decimal">
                         </div>
                         <div class="col-12 col-md-4 d-flex align-items-end gap-2">
-                            <button type="button" class="btn btn-success btn-lg flex-fill" id="save-calculation-btn">
-                                <i class="bi bi-save me-2"></i>
-                                <span class="d-none d-sm-inline">Сохранить</span>
-                                <span class="d-sm-none">Сохранить</span>
+                            <button type="button" class="btn btn-success btn-lg flex-fill min-touch-target" id="save-calculation-btn">
+                                <i class="bi bi-save me-2"></i>Сохранить
                             </button>
-                            <button type="button" class="btn btn-primary btn-lg flex-fill" id="export-excel-btn">
-                                <i class="bi bi-file-earmark-excel me-2"></i>
-                                <span class="d-none d-sm-inline">Excel</span>
-                                <span class="d-sm-none">Excel</span>
+                            <button type="button" class="btn btn-primary btn-lg flex-fill min-touch-target" id="export-excel-btn">
+                                <i class="bi bi-file-earmark-excel me-2"></i>Excel
                             </button>
                         </div>
                     </div>
@@ -110,7 +107,8 @@
                     </div>
 
                     <!-- Jadval -->
-                    <div class="table-responsive shadow-sm position-relative" style="border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <div class="table-responsive shadow-sm position-relative processing-table-wrapper" style="border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch;" role="region" aria-label="Таблица материалов">
+                        <p class="scroll-hint d-md-none" id="scroll-hint" aria-hidden="true">← Свайпните для прокрутки →</p>
                         <table class="table table-bordered table-sm align-middle mb-0" id="processing-table" style="font-size: 0.9rem;">
                             <!-- Header qatori -->
                             <thead class="table-primary">
