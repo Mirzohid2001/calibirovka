@@ -326,6 +326,9 @@ class ProcessingCalculator {
         const totalPercentage = materials.reduce((sum, m) => sum + m.percentage, 0);
         const totalOctanePercent = materials.reduce((sum, m) => sum + (m.octanePercent || 0), 0);
         const totalCost = materials.reduce((sum, m) => sum + (m.cost || 0), 0);
+        // O'rtacha og'irlikdagi удельный вес (foiz bo'yicha vaznli o'rtacha)
+        const swSum = materials.reduce((sum, m) => sum + ((m.specificWeight || 0) * m.percentage), 0);
+        const avgSpecificWeight = totalPercentage > 0 ? swSum / totalPercentage : null;
         
         // Sotish narxi va foyda
         const salePrice = parseFloat(document.getElementById('sale-price')?.value || 0);
@@ -365,6 +368,18 @@ class ProcessingCalculator {
         
         // Октановое число
         document.getElementById('total-octane-display').textContent = totalOctanePercent.toFixed(2).replace('.', ',');
+        
+        // Удельный вес (o'rtacha)
+        const specificWeightEl = document.getElementById('total-specific-weight-display');
+        if (specificWeightEl) {
+            if (avgSpecificWeight != null && avgSpecificWeight > 0) {
+                specificWeightEl.textContent = avgSpecificWeight.toFixed(3).replace('.', ',');
+                specificWeightEl.className = 'mb-0 fw-bold text-info';
+            } else {
+                specificWeightEl.textContent = '—';
+                specificWeightEl.className = 'mb-0 fw-bold text-muted';
+            }
+        }
         
         // Себестоимость
         document.getElementById('total-cost-display').textContent = this.formatNumberDisplay(totalCost, 2);
