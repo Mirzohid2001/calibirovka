@@ -15,6 +15,17 @@ class ProcessingCalculator {
         this.init();
     }
 
+    /**
+     * O'nlik sonni o'qish: vergul (,) va nuqta (.) qabul qiladi.
+     * Masalan: "1,3" va "1.3" ikkalasi ham 1.3 qaytaradi.
+     */
+    parseDecimal(value) {
+        if (value === null || value === undefined || value === '') return NaN;
+        const str = String(value).trim().replace(',', '.');
+        const num = parseFloat(str);
+        return isNaN(num) ? NaN : num;
+    }
+
     init() {
         // Sana o'rnatish
         const today = new Date();
@@ -26,7 +37,13 @@ class ProcessingCalculator {
 
         // Event listeners
         document.getElementById('calculation-date')?.addEventListener('change', () => this.updateDateDisplay());
-        document.getElementById('sale-price')?.addEventListener('input', () => this.calculateTotals());
+        const salePriceEl = document.getElementById('sale-price');
+        if (salePriceEl) {
+            salePriceEl.addEventListener('input', (e) => {
+                if (e.target.value && e.target.value.includes(',')) e.target.value = e.target.value.replace(',', '.');
+                this.calculateTotals();
+            });
+        }
         document.getElementById('export-excel-btn')?.addEventListener('click', () => this.exportToExcel());
         document.getElementById('save-calculation-btn')?.addEventListener('click', () => this.saveCalculation());
         document.getElementById('clear-all-btn')?.addEventListener('click', () => this.clearAll());
@@ -53,43 +70,41 @@ class ProcessingCalculator {
         
         productRows.forEach(row => {
             const productId = row.dataset.productId;
-            
+            const normalizeDecimalInput = (e) => {
+                const el = e.target;
+                if (el.value && el.value.includes(',')) {
+                    el.value = el.value.replace(',', '.');
+                }
+            };
+
             // Oktan input
             const octaneInput = row.querySelector('.material-octane');
             if (octaneInput) {
-                octaneInput.addEventListener('input', () => {
-                    this.updateProductRow(productId);
-                });
-                octaneInput.addEventListener('change', () => {
-                    this.updateProductRow(productId);
-                });
+                octaneInput.addEventListener('input', normalizeDecimalInput);
+                octaneInput.addEventListener('input', () => this.updateProductRow(productId));
+                octaneInput.addEventListener('change', () => this.updateProductRow(productId));
             }
-            
+
             // Narx input
             const priceInput = row.querySelector('.material-price');
             if (priceInput) {
-                priceInput.addEventListener('input', () => {
-                    this.updateProductRow(productId);
-                });
-                priceInput.addEventListener('change', () => {
-                    this.updateProductRow(productId);
-                });
+                priceInput.addEventListener('input', normalizeDecimalInput);
+                priceInput.addEventListener('input', () => this.updateProductRow(productId));
+                priceInput.addEventListener('change', () => this.updateProductRow(productId));
             }
 
             // Удельный вес input
             const specificWeightInput = row.querySelector('.material-specific-weight');
             if (specificWeightInput) {
-                specificWeightInput.addEventListener('input', () => {
-                    this.updateProductRow(productId);
-                });
-                specificWeightInput.addEventListener('change', () => {
-                    this.updateProductRow(productId);
-                });
+                specificWeightInput.addEventListener('input', normalizeDecimalInput);
+                specificWeightInput.addEventListener('input', () => this.updateProductRow(productId));
+                specificWeightInput.addEventListener('change', () => this.updateProductRow(productId));
             }
-            
+
             // Foiz input
             const percentageInput = row.querySelector('.material-percentage');
             if (percentageInput) {
+                percentageInput.addEventListener('input', normalizeDecimalInput);
                 percentageInput.addEventListener('input', () => {
                     this.updateProductRow(productId);
                     this.validateTotalPercentage();
@@ -122,10 +137,10 @@ class ProcessingCalculator {
         const octanePercentCell = row.querySelector('.material-octane-percent');
         const costCell = row.querySelector('.material-cost');
 
-        // Qiymatlarni olish
-        const octane = parseFloat(octaneInput?.value || 0);
-        const price = parseFloat(priceInput?.value || 0);
-        const percentage = parseFloat(percentageInput?.value || 0);
+        // Qiymatlarni olish (vergul va nuqta qo'llab-quvvatlanadi)
+        const octane = this.parseDecimal(octaneInput?.value) || 0;
+        const price = this.parseDecimal(priceInput?.value) || 0;
+        const percentage = this.parseDecimal(percentageInput?.value) || 0;
 
         // Hisob-kitoblar
         const octanePercent = (octane * percentage / 100) || 0;
@@ -156,7 +171,7 @@ class ProcessingCalculator {
         productRows.forEach(row => {
             const percentageInput = row.querySelector('.material-percentage');
             if (percentageInput && percentageInput.value) {
-                totalPercentage += parseFloat(percentageInput.value) || 0;
+                totalPercentage += this.parseDecimal(percentageInput.value) || 0;
             }
         });
 
@@ -245,10 +260,11 @@ class ProcessingCalculator {
             const percentageInput = row.querySelector('.material-percentage');
             const specificWeightInput = row.querySelector('.material-specific-weight');
 
-            const octane = parseFloat(octaneInput?.value || 0);
-            const price = parseFloat(priceInput?.value || 0);
-            const percentage = parseFloat(percentageInput?.value || 0);
-            const specificWeight = parseFloat(specificWeightInput?.value || 0) || null;
+            const octane = this.parseDecimal(octaneInput?.value) || 0;
+            const price = this.parseDecimal(priceInput?.value) || 0;
+            const percentage = this.parseDecimal(percentageInput?.value) || 0;
+            const sw = this.parseDecimal(specificWeightInput?.value);
+            const specificWeight = (sw !== undefined && !isNaN(sw) && sw > 0) ? sw : null;
 
             // Narx ixtiyoriy: bo'sh bo'lsa 0 deb olinadi
             // Qator hisobga kirishi uchun oktan va foiz (tonna) kiritilgan bo'lishi kifoya
@@ -331,7 +347,7 @@ class ProcessingCalculator {
         const avgSpecificWeight = totalPercentage > 0 ? swSum / totalPercentage : null;
         
         // Sotish narxi va foyda
-        const salePrice = parseFloat(document.getElementById('sale-price')?.value || 0);
+        const salePrice = this.parseDecimal(document.getElementById('sale-price')?.value) || 0;
         const profit = salePrice - totalCost;
 
         // Header qatorida ko'rsatish
@@ -421,7 +437,7 @@ class ProcessingCalculator {
             // Ma'lumotlarni olish
             const dateInput = document.getElementById('calculation-date');
             const dateValue = dateInput?.value || new Date().toISOString().split('T')[0];
-            const salePrice = parseFloat(document.getElementById('sale-price')?.value || 0);
+            const salePrice = this.parseDecimal(document.getElementById('sale-price')?.value) || 0;
             
             // Umumiy qiymatlar
             const totalPercentage = materials.reduce((sum, m) => sum + m.percentage, 0);
@@ -535,7 +551,7 @@ class ProcessingCalculator {
         }
 
         // Ma'lumotlarni yig'ish
-        const salePrice = parseFloat(document.getElementById('sale-price')?.value || 0);
+        const salePrice = this.parseDecimal(document.getElementById('sale-price')?.value) || 0;
         const totalOctanePercent = materials.reduce((sum, m) => sum + (m.octanePercent || 0), 0);
         const totalCost = materials.reduce((sum, m) => sum + (m.cost || 0), 0);
         const profit = salePrice - totalCost;
