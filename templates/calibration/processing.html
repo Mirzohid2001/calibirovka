@@ -113,11 +113,11 @@
                             <thead class="table-primary">
                                 <tr>
                                     <th colspan="2" class="text-start">ДАТА</th>
-                                    <th colspan="8" class="text-start" id="date-display"></th>
+                                    <th colspan="7" class="text-start" id="date-display"></th>
                                 </tr>
                                 <tr class="table-light">
                                     <th class="text-center" style="width: 5%;">№</th>
-                                    <th style="width: 25%;">
+                                    <th style="width: 22%;">
                                         <span class="d-none d-md-inline">НАИМЕНОВАНИЕ СИРЯ</span>
                                         <span class="d-md-none">НАИМЕНОВ.</span>
                                     </th>
@@ -134,7 +134,7 @@
                                         <span class="d-none d-md-inline">процент %</span>
                                         <span class="d-md-none">%</span>
                                     </th>
-                                    <th class="text-center fw-bold" style="width: 12%;">
+                                    <th class="text-center fw-bold" style="width: 11%;">
                                         <span class="d-none d-md-inline">ОКТАН * %</span>
                                         <span class="d-md-none">ОКТ*%</span>
                                     </th>
@@ -142,12 +142,14 @@
                                         <span class="d-none d-md-inline">СЕБЕСТОИМОСТ ($)</span>
                                         <span class="d-md-none">СЕБЕСТ.</span>
                                     </th>
+                                    <th class="text-center" style="width: 8%;"></th>
                                 </tr>
                                 <!-- Header qatorida umumiy qiymatlar -->
                                 <tr class="table-warning fw-bold">
                                     <td colspan="6"></td>
                                     <td class="text-center" id="total-octane-percent">0.00</td>
                                     <td class="text-end" id="total-cost">0.00</td>
+                                    <td></td>
                                 </tr>
                                 <tr class="table-light">
                                     <th colspan="6"></th>
@@ -159,65 +161,26 @@
                                         <span class="d-none d-md-inline">ПРЫБЛ ($)</span>
                                         <span class="d-md-none">ПРЫБЛ</span>
                                     </th>
+                                    <th></th>
                                 </tr>
                                 <tr class="table-info fw-bold">
                                     <td colspan="6"></td>
                                     <td class="text-center" id="header-sale-price">0.00</td>
                                     <td class="text-end" id="header-profit">0.00</td>
+                                    <td></td>
                                 </tr>
                             </thead>
                             <tbody id="materials-tbody">
-                                <!-- Barcha productlar bu yerda ko'rinadi -->
-                                {% for product in products %}
-                                <tr data-product-id="{{ product.id }}" class="product-row">
-                                    <td class="text-center">{{ forloop.counter }}</td>
-                                    <td class="fw-semibold product-name">{{ product.name }}</td>
-                                    <td class="text-center">
-                                        <input type="text" 
-                                               class="form-control form-control-sm text-center material-octane" 
-                                               data-product-id="{{ product.id }}"
-                                               placeholder="—"
-                                               inputmode="decimal"
-                                               autocomplete="off"
-                                               value="{{ product.octane_number|default_if_none:'' }}">
-                                    </td>
-                                    <td class="text-center">
-                                        <input type="text" 
-                                               class="form-control form-control-sm text-center material-specific-weight" 
-                                               data-product-id="{{ product.id }}"
-                                               placeholder="—"
-                                               inputmode="decimal"
-                                               autocomplete="off"
-                                               value="{{ product.specific_weight_kg_per_liter|default_if_none:'' }}">
-                                    </td>
-                                    <td class="text-end">
-                                        <input type="text" 
-                                               class="form-control form-control-sm text-end material-price" 
-                                               data-product-id="{{ product.id }}"
-                                               placeholder="0.00"
-                                               inputmode="decimal"
-                                               autocomplete="off">
-                                    </td>
-                                    <td class="text-center">
-                                        <input type="text" 
-                                               class="form-control form-control-sm text-center material-percentage" 
-                                               data-product-id="{{ product.id }}"
-                                               placeholder="0.00"
-                                               inputmode="decimal"
-                                               autocomplete="off">
-                                    </td>
-                                    <td class="text-center fw-bold material-octane-percent">0.00</td>
-                                    <td class="text-end fw-bold material-cost">0.00</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        Нет продуктов в базе данных. Добавьте продукты в админ-панели.
-                                    </td>
-                                </tr>
-                                {% endfor %}
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="9" class="text-start py-2">
+                                        <button type="button" class="btn btn-outline-primary btn-sm min-touch-target" id="add-row-btn">
+                                            <i class="bi bi-plus-lg me-1"></i>Добавить строку
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
 
@@ -288,5 +251,6 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ products_data|json_script:"products-data" }}
 <script src="{% static 'js/processing_calculator.js' %}"></script>
 {% endblock %}

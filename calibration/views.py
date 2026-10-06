@@ -2308,11 +2308,61 @@ def view_gasoline_blend_history(request, calculation_id):
         return redirect('calibration:history')
 
 
+def _recompute_processing_totals(materials, sale_price):
+    """Qayta hisob: foiz, oktan hissasi, tannarx va foyda."""
+    total_percentage = Decimal('0')
+    total_octane_percent = Decimal('0')
+    total_cost = Decimal('0')
+    cleaned = []
+
+    for item in materials or []:
+        name = str(item.get('name') or '').strip()
+        percentage = Decimal(str(item.get('percentage') or 0))
+        octane = Decimal(str(item.get('octane') or 0))
+        price = Decimal(str(item.get('price') or 0))
+        specific_weight = item.get('specificWeight')
+        if specific_weight in ('', None):
+            specific_weight = None
+        else:
+            specific_weight = float(specific_weight)
+
+        if not name or percentage <= 0:
+            continue
+
+        octane_percent = octane * percentage / Decimal('100')
+        cost = price * percentage / Decimal('100')
+        total_percentage += percentage
+        total_octane_percent += octane_percent
+        total_cost += cost
+        cleaned.append({
+            'name': name,
+            'octane': float(octane),
+            'specificWeight': specific_weight,
+            'price': float(price),
+            'percentage': float(percentage),
+            'octanePercent': float(octane_percent),
+            'cost': float(cost),
+        })
+
+    sale = Decimal(str(sale_price or 0))
+    return cleaned, float(total_percentage), float(total_octane_percent), total_cost, sale - total_cost
+
+
 def processing_calculator(request):
     """Калькулятор переработки (Excel'ga o'xshash)"""
-    products = Product.objects.filter(is_for_processing=True).order_by('processing_order', 'name')
+    products = Product.objects.all().order_by('processing_order', 'name')
+    products_data = [
+        {
+            'id': product.id,
+            'name': product.name,
+            'octane': product.octane_number,
+            'specificWeight': product.specific_weight_kg_per_liter,
+        }
+        for product in products
+    ]
     return render(request, 'calibration/processing.html', {
-        'products': products
+        'products': products,
+        'products_data': products_data,
     })
 
 
@@ -2333,25 +2383,30 @@ def save_processing_calculation(request):
         
         # Ma'lumotlarni olish
         calculation_date_str = data.get('calculation_date')
-        sale_price = Decimal(str(data.get('sale_price', 0)))
-        materials = data.get('materials', [])
-        total_percentage = float(data.get('total_percentage', 0))
-        total_octane_percent = float(data.get('total_octane_percent', 0))
-        total_cost = Decimal(str(data.get('total_cost', 0)))
-        total_profit = Decimal(str(data.get('total_profit', 0)))
         notes = data.get('notes', '').strip()
-        
-        # Validatsiya
+
         if not calculation_date_str:
             return JsonResponse({
                 'success': False,
                 'error': 'Дата не указана'
             }, status=400)
-        
-        if not materials or len(materials) == 0:
+
+        materials, total_percentage, total_octane_percent, total_cost, total_profit = _recompute_processing_totals(
+            data.get('materials', []),
+            data.get('sale_price', 0),
+        )
+        sale_price = Decimal(str(data.get('sale_price') or 0))
+
+        if not materials:
             return JsonResponse({
                 'success': False,
                 'error': 'Нет материалов для сохранения'
+            }, status=400)
+
+        if total_percentage > 100.01:
+            return JsonResponse({
+                'success': False,
+                'error': f'Общий процент превышает 100%: {total_percentage:.2f}%'
             }, status=400)
         
         # Sana formatini o'zgartirish
@@ -2427,14 +2482,15 @@ def export_processing_excel(request):
         
         data = json.loads(request.body)
         calculation_date_str = data.get('calculation_date', '')
-        sale_price = float(data.get('sale_price', 0))
-        materials = data.get('materials', [])
-        total_percentage = float(data.get('total_percentage', 0))
-        total_octane_percent = float(data.get('total_octane_percent', 0))
-        total_cost = float(data.get('total_cost', 0))
-        total_profit = float(data.get('total_profit', 0))
+        materials, total_percentage, total_octane_percent, total_cost_dec, total_profit_dec = _recompute_processing_totals(
+            data.get('materials', []),
+            data.get('sale_price', 0),
+        )
+        sale_price = float(data.get('sale_price') or 0)
+        total_cost = float(total_cost_dec)
+        total_profit = float(total_profit_dec)
         
-        if not materials or len(materials) == 0:
+        if not materials:
             return JsonResponse({
                 'success': False,
                 'error': 'Нет данных для экспорта'

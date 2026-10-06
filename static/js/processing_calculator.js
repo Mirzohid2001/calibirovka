@@ -1,10 +1,10 @@
 /**
  * Excel'ga o'xshash kalkulyator - Переработка
- * 
- * YANGI LOGIKA:
- * 1. Barcha productlar jadvalda ko'rinadi (bazadan)
- * 2. Foydalanuvchi faqat foiz, oktan va narxni kiritadi
- * 3. Hisob-kitoblar avtomatik bajariladi:
+ *
+ * LOGIKA:
+ * 1. Foydalanuvchi bazadagi istalgan tovarni tanlab jadvalga qo'shadi
+ * 2. Foiz, oktan va narx kiritiladi
+ * 3. Hisob-kitoblar avtomatik:
  *    - ОКТАН * % = Октан × Процент / 100
  *    - СЕБЕСТОИМОСТ = Цена × Процент / 100
  * 4. Faqat to'ldirilgan productlar saqlashda yuboriladi
@@ -12,6 +12,8 @@
 
 class ProcessingCalculator {
     constructor() {
+        this.products = [];
+        this.rowSeq = 0;
         this.init();
     }
 
@@ -27,15 +29,25 @@ class ProcessingCalculator {
     }
 
     init() {
-        // Sana o'rnatish
+        const dataEl = document.getElementById('products-data');
+        if (dataEl) {
+            try {
+                this.products = JSON.parse(dataEl.textContent) || [];
+            } catch (e) {
+                console.error('Products JSON parse error:', e);
+                this.products = [];
+            }
+        }
+
         const today = new Date();
         const dateInput = document.getElementById('calculation-date');
         if (dateInput) {
-            dateInput.value = today.toISOString().split('T')[0];
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            dateInput.value = `${today.getFullYear()}-${month}-${day}`;
             this.updateDateDisplay();
         }
 
-        // Event listeners
         document.getElementById('calculation-date')?.addEventListener('change', () => this.updateDateDisplay());
         const salePriceEl = document.getElementById('sale-price');
         if (salePriceEl) {
@@ -47,11 +59,11 @@ class ProcessingCalculator {
         document.getElementById('export-excel-btn')?.addEventListener('click', () => this.exportToExcel());
         document.getElementById('save-calculation-btn')?.addEventListener('click', () => this.saveCalculation());
         document.getElementById('clear-all-btn')?.addEventListener('click', () => this.clearAll());
+        document.getElementById('add-row-btn')?.addEventListener('click', () => this.addEmptyRow());
 
-        // Jadvaldagi barcha input'larni event listener qo'shish
-        this.attachInputListeners();
+        this.attachTableListeners();
+        this.resetRows(4);
 
-        // Scroll hint - mobilda bir marta scroll qilgandan keyin yashirish
         const tableWrapper = document.querySelector('.processing-table-wrapper');
         const scrollHint = document.getElementById('scroll-hint');
         if (tableWrapper && scrollHint) {
@@ -60,93 +72,205 @@ class ProcessingCalculator {
             }, { once: true });
         }
 
-        // Boshlang'ich hisob-kitoblar
         this.calculateTotals();
     }
 
-    attachInputListeners() {
-        // Barcha product qatorlarini topish
-        const productRows = document.querySelectorAll('.product-row');
-        
-        productRows.forEach(row => {
-            const productId = row.dataset.productId;
-            const normalizeDecimalInput = (e) => {
-                const el = e.target;
-                if (el.value && el.value.includes(',')) {
-                    el.value = el.value.replace(',', '.');
-                }
-            };
+    getSelectedProductIds(exceptSelect = null) {
+        const ids = new Set();
+        document.querySelectorAll('.product-name-select').forEach((select) => {
+            if (exceptSelect && select === exceptSelect) return;
+            if (select.value) ids.add(String(select.value));
+        });
+        return ids;
+    }
 
-            // Oktan input
-            const octaneInput = row.querySelector('.material-octane');
-            if (octaneInput) {
-                octaneInput.addEventListener('input', normalizeDecimalInput);
-                octaneInput.addEventListener('input', () => this.updateProductRow(productId));
-                octaneInput.addEventListener('change', () => this.updateProductRow(productId));
-            }
+    fillProductSelect(select, selectedId = '') {
+        const used = this.getSelectedProductIds(select);
+        const current = selectedId || select.value || '';
+        select.innerHTML = '';
 
-            // Narx input
-            const priceInput = row.querySelector('.material-price');
-            if (priceInput) {
-                priceInput.addEventListener('input', normalizeDecimalInput);
-                priceInput.addEventListener('input', () => this.updateProductRow(productId));
-                priceInput.addEventListener('change', () => this.updateProductRow(productId));
-            }
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = this.products.length
+            ? '-- Выберите сырьё --'
+            : 'Нет продуктов в базе';
+        select.appendChild(placeholder);
 
-            // Удельный вес input
-            const specificWeightInput = row.querySelector('.material-specific-weight');
-            if (specificWeightInput) {
-                specificWeightInput.addEventListener('input', normalizeDecimalInput);
-                specificWeightInput.addEventListener('input', () => this.updateProductRow(productId));
-                specificWeightInput.addEventListener('change', () => this.updateProductRow(productId));
-            }
+        this.products.forEach((product) => {
+            const id = String(product.id);
+            if (used.has(id) && id !== String(current)) return;
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = product.name || '';
+            select.appendChild(option);
+        });
 
-            // Foiz input
-            const percentageInput = row.querySelector('.material-percentage');
-            if (percentageInput) {
-                percentageInput.addEventListener('input', normalizeDecimalInput);
-                percentageInput.addEventListener('input', () => {
-                    this.updateProductRow(productId);
-                    this.validateTotalPercentage();
-                });
-                percentageInput.addEventListener('change', () => {
-                    this.updateProductRow(productId);
-                    this.validateTotalPercentage();
-                });
-            }
+        if (current) select.value = current;
+    }
+
+    refreshAllRowSelects() {
+        document.querySelectorAll('.product-name-select').forEach((select) => {
+            this.fillProductSelect(select, select.value);
         });
     }
 
-    updateProductRow(productId) {
-        /**
-         * Product qatorini yangilash
-         * 
-         * QADAMLAR:
-         * 1. Input'lardan qiymatlarni olish
-         * 2. Hisob-kitoblarni bajarish
-         * 3. Jadvaldagi qiymatlarni yangilash
-         */
-        
-        const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+    resetRows(count = 4) {
+        const tbody = document.getElementById('materials-tbody');
+        if (tbody) tbody.innerHTML = '';
+        this.rowSeq = 0;
+        for (let i = 0; i < count; i++) {
+            this.addEmptyRow();
+        }
+    }
+
+    addEmptyRow() {
+        const tbody = document.getElementById('materials-tbody');
+        if (!tbody) return;
+
+        this.rowSeq += 1;
+        const rowId = String(this.rowSeq);
+        const row = document.createElement('tr');
+        row.className = 'product-row';
+        row.dataset.rowId = rowId;
+        row.dataset.productId = '';
+        row.innerHTML = `
+            <td class="text-center row-number"></td>
+            <td>
+                <select class="form-select form-select-sm product-name-select input-no-zoom" aria-label="Наименование сырья">
+                </select>
+            </td>
+            <td class="text-center">
+                <input type="text"
+                       class="form-control form-control-sm text-center material-octane input-no-zoom"
+                       placeholder="—"
+                       inputmode="decimal"
+                       autocomplete="off">
+            </td>
+            <td class="text-center">
+                <input type="text"
+                       class="form-control form-control-sm text-center material-specific-weight input-no-zoom"
+                       placeholder="—"
+                       inputmode="decimal"
+                       autocomplete="off">
+            </td>
+            <td class="text-end">
+                <input type="text"
+                       class="form-control form-control-sm text-end material-price input-no-zoom"
+                       placeholder="0.00"
+                       inputmode="decimal"
+                       autocomplete="off">
+            </td>
+            <td class="text-center">
+                <input type="text"
+                       class="form-control form-control-sm text-center material-percentage input-no-zoom"
+                       placeholder="0.00"
+                       inputmode="decimal"
+                       autocomplete="off">
+            </td>
+            <td class="text-center fw-bold material-octane-percent">0.00</td>
+            <td class="text-end fw-bold material-cost">0.00</td>
+            <td class="text-center">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-product-btn min-touch-target" title="Удалить">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+        this.fillProductSelect(row.querySelector('.product-name-select'));
+        this.renumberRows();
+    }
+
+    applyProductToRow(row) {
+        const select = row.querySelector('.product-name-select');
+        const productId = select?.value || '';
+        row.dataset.productId = productId;
+
+        const octaneInput = row.querySelector('.material-octane');
+        const specificWeightInput = row.querySelector('.material-specific-weight');
+        const product = this.products.find((item) => String(item.id) === String(productId));
+
+        if (product) {
+            if (octaneInput) octaneInput.value = product.octane == null ? '' : product.octane;
+            if (specificWeightInput) {
+                specificWeightInput.value = product.specificWeight == null ? '' : product.specificWeight;
+            }
+        } else {
+            if (octaneInput) octaneInput.value = '';
+            if (specificWeightInput) specificWeightInput.value = '';
+        }
+
+        this.refreshAllRowSelects();
+        this.updateRow(row);
+    }
+
+    removeRow(row) {
+        if (!row) return;
+        row.remove();
+        if (!document.querySelector('#materials-tbody .product-row')) {
+            this.addEmptyRow();
+        }
+        this.renumberRows();
+        this.refreshAllRowSelects();
+        this.calculateTotals();
+        this.validateTotalPercentage();
+        this.updateSelectedComposition();
+    }
+
+    renumberRows() {
+        document.querySelectorAll('#materials-tbody .product-row').forEach((row, index) => {
+            const numberCell = row.querySelector('.row-number');
+            if (numberCell) numberCell.textContent = String(index + 1);
+        });
+    }
+
+    attachTableListeners() {
+        const tbody = document.getElementById('materials-tbody');
+        if (!tbody) return;
+
+        const handleInput = (e) => {
+            const el = e.target;
+            if (!el.matches('.material-octane, .material-price, .material-percentage, .material-specific-weight')) {
+                return;
+            }
+            if (el.value && el.value.includes(',')) {
+                el.value = el.value.replace(',', '.');
+            }
+            const row = el.closest('.product-row');
+            if (!row) return;
+            this.updateRow(row);
+        };
+
+        tbody.addEventListener('input', handleInput);
+        tbody.addEventListener('change', (e) => {
+            if (e.target.matches('.product-name-select')) {
+                this.applyProductToRow(e.target.closest('.product-row'));
+                return;
+            }
+            handleInput(e);
+        });
+        tbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-product-btn');
+            if (!btn) return;
+            this.removeRow(btn.closest('.product-row'));
+        });
+    }
+
+    updateRow(row) {
         if (!row) return;
 
-        const name = row.querySelector('.product-name')?.textContent.trim() || '';
         const octaneInput = row.querySelector('.material-octane');
         const priceInput = row.querySelector('.material-price');
         const percentageInput = row.querySelector('.material-percentage');
         const octanePercentCell = row.querySelector('.material-octane-percent');
         const costCell = row.querySelector('.material-cost');
 
-        // Qiymatlarni olish (vergul va nuqta qo'llab-quvvatlanadi)
         const octane = this.parseDecimal(octaneInput?.value) || 0;
         const price = this.parseDecimal(priceInput?.value) || 0;
         const percentage = this.parseDecimal(percentageInput?.value) || 0;
 
-        // Hisob-kitoblar
-        const octanePercent = (octane * percentage / 100) || 0;
-        const cost = (price * percentage / 100) || 0;
+        const octanePercent = octane * percentage / 100;
+        const cost = price * percentage / 100;
 
-        // Jadvaldagi qiymatlarni yangilash
         if (octanePercentCell) {
             octanePercentCell.textContent = octanePercent.toFixed(2).replace('.', ',');
         }
@@ -154,55 +278,38 @@ class ProcessingCalculator {
             costCell.textContent = this.formatNumberDisplay(cost, 2);
         }
 
-        // Umumiy qiymatlarni yangilash
         this.calculateTotals();
-        
-        // Tanlangan tarkibni yangilash
-        this.updateSelectedComposition();
     }
 
     validateTotalPercentage() {
-        /**
-         * Jami foizni tekshirish (100% dan oshmasligi kerak)
-         */
+        const totalPercentage = this.getFilledMaterials().reduce((sum, m) => sum + m.percentage, 0);
         const productRows = document.querySelectorAll('.product-row');
-        let totalPercentage = 0;
 
-        productRows.forEach(row => {
+        productRows.forEach((row) => {
             const percentageInput = row.querySelector('.material-percentage');
-            if (percentageInput && percentageInput.value) {
-                totalPercentage += this.parseDecimal(percentageInput.value) || 0;
-            }
-        });
-
-        // Barcha foiz input'larini rang bilan belgilash
-        productRows.forEach(row => {
-            const percentageInput = row.querySelector('.material-percentage');
-            if (percentageInput) {
-                if (totalPercentage > 100.01) {
-                    percentageInput.classList.add('is-invalid');
-                    percentageInput.classList.remove('is-valid');
-                } else if (totalPercentage > 99.9) {
-                    percentageInput.classList.add('is-valid');
-                    percentageInput.classList.remove('is-invalid');
-                } else {
-                    percentageInput.classList.remove('is-invalid', 'is-valid');
-                }
-            }
-        });
-
-        // Xabar ko'rsatish
-        const percentageDisplay = document.getElementById('total-percentage-display');
-        if (percentageDisplay) {
-            percentageDisplay.textContent = totalPercentage.toFixed(2) + '%';
+            if (!percentageInput) return;
             if (totalPercentage > 100.01) {
-                percentageDisplay.className = 'mb-0 fw-bold text-danger';
-            } else if (totalPercentage >= 99.9) {
-                percentageDisplay.className = 'mb-0 fw-bold text-success';
-            } else if (totalPercentage < 50) {
-                percentageDisplay.className = 'mb-0 fw-bold text-warning';
+                percentageInput.classList.add('is-invalid');
+                percentageInput.classList.remove('is-valid');
+            } else if (totalPercentage > 99.9 && totalPercentage <= 100.01) {
+                percentageInput.classList.add('is-valid');
+                percentageInput.classList.remove('is-invalid');
             } else {
-                percentageDisplay.className = 'mb-0 fw-bold';
+                percentageInput.classList.remove('is-invalid', 'is-valid');
+            }
+        });
+
+        const percentageEl = document.getElementById('total-percentage-display');
+        if (percentageEl) {
+            percentageEl.textContent = totalPercentage.toFixed(2) + '%';
+            if (totalPercentage > 100.01) {
+                percentageEl.className = 'mb-0 fw-bold text-danger';
+            } else if (totalPercentage >= 99.9) {
+                percentageEl.className = 'mb-0 fw-bold text-success';
+            } else if (totalPercentage > 0 && totalPercentage < 50) {
+                percentageEl.className = 'mb-0 fw-bold text-warning';
+            } else {
+                percentageEl.className = 'mb-0 fw-bold';
             }
         }
     }
@@ -210,31 +317,24 @@ class ProcessingCalculator {
     updateDateDisplay() {
         const dateInput = document.getElementById('calculation-date');
         const dateDisplay = document.getElementById('date-display');
-        if (dateInput && dateDisplay) {
-            const date = new Date(dateInput.value);
-            const formattedDate = date.toLocaleDateString('ru-RU');
-            dateDisplay.textContent = formattedDate;
+        if (dateInput && dateDisplay && dateInput.value) {
+            const parts = dateInput.value.split('-').map(Number);
+            if (parts.length === 3 && parts.every((n) => !isNaN(n))) {
+                const date = new Date(parts[0], parts[1] - 1, parts[2]);
+                dateDisplay.textContent = date.toLocaleDateString('ru-RU');
+                return;
+            }
+            dateDisplay.textContent = dateInput.value;
         }
     }
 
     clearAll() {
         if (confirm('Вы уверены, что хотите очистить все данные?')) {
-            // Barcha input'larni tozalash
-            const productRows = document.querySelectorAll('.product-row');
-            productRows.forEach(row => {
-                const octaneInput = row.querySelector('.material-octane');
-                const priceInput = row.querySelector('.material-price');
-                const percentageInput = row.querySelector('.material-percentage');
-                const specificWeightInput = row.querySelector('.material-specific-weight');
-                
-                if (octaneInput) octaneInput.value = '';
-                if (priceInput) priceInput.value = '';
-                if (percentageInput) percentageInput.value = '';
-                if (specificWeightInput) specificWeightInput.value = '';
-            });
-
-            document.getElementById('sale-price').value = '';
+            const salePrice = document.getElementById('sale-price');
+            if (salePrice) salePrice.value = '';
+            this.resetRows(4);
             this.calculateTotals();
+            this.validateTotalPercentage();
             this.updateSelectedComposition();
         }
     }
@@ -254,7 +354,8 @@ class ProcessingCalculator {
 
         productRows.forEach((row, index) => {
             const productId = row.dataset.productId;
-            const name = row.querySelector('.product-name')?.textContent.trim() || '';
+            const select = row.querySelector('.product-name-select');
+            const name = select?.value ? (select.selectedOptions?.[0]?.textContent.trim() || '') : '';
             const octaneInput = row.querySelector('.material-octane');
             const priceInput = row.querySelector('.material-price');
             const percentageInput = row.querySelector('.material-percentage');
@@ -264,13 +365,11 @@ class ProcessingCalculator {
             const price = this.parseDecimal(priceInput?.value) || 0;
             const percentage = this.parseDecimal(percentageInput?.value) || 0;
             const sw = this.parseDecimal(specificWeightInput?.value);
-            const specificWeight = (sw !== undefined && !isNaN(sw) && sw > 0) ? sw : null;
+            const specificWeight = (!isNaN(sw) && sw > 0) ? sw : null;
 
-            // Narx ixtiyoriy: bo'sh bo'lsa 0 deb olinadi
-            // Qator hisobga kirishi uchun oktan va foiz (tonna) kiritilgan bo'lishi kifoya
-            if (name && octane > 0 && percentage > 0) {
-                const octanePercent = (octane * percentage / 100);
-                const cost = (price * percentage / 100);
+            if (select?.value && name && percentage > 0) {
+                const octanePercent = octane * percentage / 100;
+                const cost = price * percentage / 100;
 
                 materials.push({
                     id: productId,
@@ -332,31 +431,30 @@ class ProcessingCalculator {
     }
 
     calculateTotals() {
-        /**
-         * Umumiy qiymatlarni hisoblash
-         */
-        
         const materials = this.getFilledMaterials();
 
-        // Umumiy qiymatlar (yig'indi)
         const totalPercentage = materials.reduce((sum, m) => sum + m.percentage, 0);
         const totalOctanePercent = materials.reduce((sum, m) => sum + (m.octanePercent || 0), 0);
         const totalCost = materials.reduce((sum, m) => sum + (m.cost || 0), 0);
-        // O'rtacha og'irlikdagi удельный вес (foiz bo'yicha vaznli o'rtacha)
-        const swSum = materials.reduce((sum, m) => sum + ((m.specificWeight || 0) * m.percentage), 0);
-        const avgSpecificWeight = totalPercentage > 0 ? swSum / totalPercentage : null;
-        
-        // Sotish narxi va foyda
+        const blendOctane = totalPercentage > 0 ? (totalOctanePercent * 100) / totalPercentage : 0;
+
+        const swWeighted = materials.reduce((acc, m) => {
+            if (m.specificWeight == null) return acc;
+            return {
+                sum: acc.sum + (m.specificWeight * m.percentage),
+                pct: acc.pct + m.percentage,
+            };
+        }, { sum: 0, pct: 0 });
+        const avgSpecificWeight = swWeighted.pct > 0 ? swWeighted.sum / swWeighted.pct : null;
+
         const salePrice = this.parseDecimal(document.getElementById('sale-price')?.value) || 0;
         const profit = salePrice - totalCost;
 
-        // Header qatorida ko'rsatish
         document.getElementById('total-octane-percent').textContent = totalOctanePercent.toFixed(2).replace('.', ',');
         document.getElementById('total-cost').textContent = this.formatNumberDisplay(totalCost, 2);
         document.getElementById('header-sale-price').textContent = this.formatNumberDisplay(salePrice, 2);
         document.getElementById('header-profit').textContent = this.formatNumberDisplay(profit, 2);
-        
-        // Header qatorida rang o'zgarishi (foyda manfiy bo'lsa qizil)
+
         const profitEl = document.getElementById('header-profit');
         if (profitEl) {
             if (profit < 0) {
@@ -368,24 +466,10 @@ class ProcessingCalculator {
             }
         }
 
-        // Statistikalar (pastdagi kartalar)
-        // Общий процент
-        const percentageEl = document.getElementById('total-percentage-display');
-        if (percentageEl) {
-            percentageEl.textContent = totalPercentage.toFixed(2) + '%';
-            if (totalPercentage >= 99.9) {
-                percentageEl.className = 'mb-0 fw-bold text-success';
-            } else if (totalPercentage < 50) {
-                percentageEl.className = 'mb-0 fw-bold text-warning';
-            } else {
-                percentageEl.className = 'mb-0 fw-bold';
-            }
-        }
-        
-        // Октановое число
-        document.getElementById('total-octane-display').textContent = totalOctanePercent.toFixed(2).replace('.', ',');
-        
-        // Удельный вес (o'rtacha)
+        this.validateTotalPercentage();
+
+        document.getElementById('total-octane-display').textContent = blendOctane.toFixed(2).replace('.', ',');
+
         const specificWeightEl = document.getElementById('total-specific-weight-display');
         if (specificWeightEl) {
             if (avgSpecificWeight != null && avgSpecificWeight > 0) {
@@ -396,11 +480,9 @@ class ProcessingCalculator {
                 specificWeightEl.className = 'mb-0 fw-bold text-muted';
             }
         }
-        
-        // Себестоимость
+
         document.getElementById('total-cost-display').textContent = this.formatNumberDisplay(totalCost, 2);
-        
-        // Прибыль (foyda manfiy bo'lsa qizil rang)
+
         const profitDisplayEl = document.getElementById('total-profit-display');
         if (profitDisplayEl) {
             profitDisplayEl.textContent = this.formatNumberDisplay(profit, 2);
@@ -410,8 +492,7 @@ class ProcessingCalculator {
                 profitDisplayEl.className = 'mb-0 fw-bold text-success';
             }
         }
-        
-        // Tanlangan tarkibni yangilash
+
         this.updateSelectedComposition();
     }
 
@@ -569,7 +650,7 @@ class ProcessingCalculator {
 
         // AJAX so'rov
         try {
-            const response = await fetch('/calibration/processing/save/', {
+            const response = await fetch('/processing/save/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -640,18 +721,12 @@ class ProcessingCalculator {
     }
 
     formatNumberDisplay(num, decimals = 2) {
-        /**
-         * Raqamni ko'rsatish uchun formatlash
-         * 
-         * FORMAT:
-         * - $ belgisi bilan
-         * - Vergul bilan (Excel'ga o'xshash)
-         * - Bo'shliqlar bilan (1000 → "1 000")
-         */
         if (isNaN(num) || num === null || num === undefined) return '$0,00';
+        if (num < 0) return '-' + this.formatNumberDisplay(Math.abs(num), decimals);
         const formatted = parseFloat(num).toFixed(decimals);
-        // Excel'ga o'xshash format (vergul bilan, bo'shliqlar bilan) + $ belgisi
-        return '$' + formatted.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        const [intPart, fracPart] = formatted.split('.');
+        const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        return '$' + grouped + ',' + fracPart;
     }
 }
 

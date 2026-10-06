@@ -1523,6 +1523,11 @@ footer {
     padding: 0.85rem 0.5rem !important;
 }
 
+#processing-table tbody .product-name-select {
+    min-width: 10rem;
+    font-weight: 600;
+}
+
 /* Input fields in table */
 #processing-table tbody input.form-control-sm {
     border: 2px solid #e9ecef;
@@ -2176,11 +2181,9 @@ footer {
     #processing-table thead th:nth-child(2),
     #processing-table tbody td:nth-child(2) {
         width: 16% !important;
-        min-width: 90px;
-        max-width: 120px;
-        font-size: 0.6rem !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        min-width: 148px;
+        max-width: none;
+        overflow: visible;
     }
     
     #processing-table thead th:nth-child(3),
@@ -2220,7 +2223,7 @@ footer {
     
     /* Input fields - larger for touch (44px min per Apple HIG) */
     #processing-table tbody input.form-control-sm {
-        font-size: 0.85rem !important;
+        font-size: 16px !important;
         padding: 0.5rem 0.35rem !important;
         width: 100% !important;
         min-height: 44px !important;
@@ -2244,8 +2247,8 @@ footer {
         }
         
         /* Table inputs - touch-friendly 44px (Apple guideline) */
-        #processing-table tbody input[type="number"] {
-            font-size: 0.85rem !important;
+        #processing-table tbody input {
+            font-size: 16px !important;
             min-height: 44px !important;
         }
     }
@@ -2444,30 +2447,79 @@ footer {
 /* Jadval - sticky birinchi 2 ustun (№ va nom) gorizontal scroll paytida */
 @media (max-width: 767.98px) {
     #processing-table thead th:nth-child(1),
-    #processing-table thead th:nth-child(2),
-    #processing-table tbody td:nth-child(1),
-    #processing-table tbody td:nth-child(2) {
+    #processing-table tbody td:nth-child(1) {
         position: sticky;
         left: 0;
-        z-index: 10;
+        z-index: 11;
         background: white !important;
-        box-shadow: 2px 0 4px rgba(0,0,0,0.08);
+        min-width: 36px;
+        width: 36px;
+        box-shadow: none;
     }
-    
+
+    #processing-table thead th:nth-child(2),
+    #processing-table tbody td:nth-child(2) {
+        position: sticky;
+        left: 36px;
+        z-index: 11;
+        background: white !important;
+        min-width: 148px;
+        box-shadow: 3px 0 6px rgba(0,0,0,0.08);
+        overflow: visible;
+        font-size: 16px !important;
+        max-width: none;
+    }
+
     #processing-table thead tr.table-primary th:nth-child(1),
     #processing-table thead tr.table-primary th:nth-child(2) {
         background: #0d6efd !important;
         color: white !important;
+        z-index: 12;
     }
-    
+
     #processing-table thead tr.table-light th:nth-child(1),
     #processing-table thead tr.table-light th:nth-child(2) {
         background: #e9ecef !important;
+        z-index: 12;
     }
-    
+
     #processing-table tbody tr:nth-child(even) td:nth-child(1),
     #processing-table tbody tr:nth-child(even) td:nth-child(2) {
         background: #f8f9fa !important;
+    }
+
+    #processing-table tbody .product-name-select,
+    #processing-table tbody input.form-control-sm {
+        font-size: 16px !important;
+        min-height: 44px;
+    }
+
+    #processing-table tbody .product-name-select {
+        min-width: 8.5rem;
+        max-width: 100%;
+    }
+
+    #processing-table tbody .remove-product-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.35rem;
+    }
+
+    #selected-composition-card {
+        display: none !important;
+    }
+
+    #processing-table tbody tr:hover,
+    #selected-composition-table tbody tr:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    #total-percentage-display:hover,
+    #total-octane-display:hover,
+    #total-cost-display:hover,
+    #total-profit-display:hover {
+        transform: none;
     }
 }
 
