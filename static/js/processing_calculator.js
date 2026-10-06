@@ -14,6 +14,9 @@ class ProcessingCalculator {
     constructor() {
         this.products = [];
         this.rowSeq = 0;
+        this.customValue = '__custom__';
+        this.targetRowForNewProduct = null;
+        this.newProductModal = null;
         this.init();
     }
 
@@ -60,9 +63,28 @@ class ProcessingCalculator {
         document.getElementById('save-calculation-btn')?.addEventListener('click', () => this.saveCalculation());
         document.getElementById('clear-all-btn')?.addEventListener('click', () => this.clearAll());
         document.getElementById('add-row-btn')?.addEventListener('click', () => this.addEmptyRow());
+        document.getElementById('new-product-btn')?.addEventListener('click', () => this.openNewProductModal(null));
+        document.getElementById('new-product-save-btn')?.addEventListener('click', () => this.saveNewProduct());
+        ['new-product-name', 'new-product-octane', 'new-product-weight'].forEach((id) => {
+            document.getElementById(id)?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.saveNewProduct();
+                }
+            });
+        });
+
+        const modalEl = document.getElementById('newProductModal');
+        if (modalEl && window.bootstrap) {
+            this.newProductModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modalEl.addEventListener('hidden.bs.modal', () => {
+                this.resetNewProductForm();
+                this.targetRowForNewProduct = null;
+            });
+        }
 
         this.attachTableListeners();
-        this.resetRows(4);
+        this.resetRows(5);
 
         const tableWrapper = document.querySelector('.processing-table-wrapper');
         const scrollHint = document.getElementById('scroll-hint');
@@ -79,7 +101,7 @@ class ProcessingCalculator {
         const ids = new Set();
         document.querySelectorAll('.product-name-select').forEach((select) => {
             if (exceptSelect && select === exceptSelect) return;
-            if (select.value) ids.add(String(select.value));
+            if (select.value && select.value !== this.customValue) ids.add(String(select.value));
         });
         return ids;
     }
@@ -96,6 +118,11 @@ class ProcessingCalculator {
             : 'Нет продуктов в базе';
         select.appendChild(placeholder);
 
+        const customOption = document.createElement('option');
+        customOption.value = this.customValue;
+        customOption.textContent = '+ Ввести своё сырьё';
+        select.appendChild(customOption);
+
         this.products.forEach((product) => {
             const id = String(product.id);
             if (used.has(id) && id !== String(current)) return;
@@ -105,7 +132,7 @@ class ProcessingCalculator {
             select.appendChild(option);
         });
 
-        if (current) select.value = current;
+        if (current && current !== this.customValue) select.value = current;
     }
 
     refreshAllRowSelects() {
@@ -114,7 +141,131 @@ class ProcessingCalculator {
         });
     }
 
-    resetRows(count = 4) {
+    openNewProductModal(row) {
+        this.targetRowForNewProduct = row || null;
+        this.resetNewProductForm();
+        if (this.newProductModal) {
+            this.newProductModal.show();
+            setTimeout(() => document.getElementById('new-product-name')?.focus(), 300);
+            return;
+        }
+        alert('Не удалось открыть форму. Обновите страницу и попробуйте снова.');
+    }
+
+    resetNewProductForm() {
+        const nameInput = document.getElementById('new-product-name');
+        const octaneInput = document.getElementById('new-product-octane');
+        const weightInput = document.getElementById('new-product-weight');
+        const errorEl = document.getElementById('new-product-error');
+        if (nameInput) nameInput.value = '';
+        if (octaneInput) octaneInput.value = '';
+        if (weightInput) weightInput.value = '';
+        if (errorEl) {
+            errorEl.textContent = '';
+            errorEl.classList.add('d-none');
+        }
+    }
+
+    showNewProductError(message) {
+        const errorEl = document.getElementById('new-product-error');
+        if (!errorEl) {
+            alert(message);
+            return;
+        }
+        errorEl.textContent = message;
+        errorEl.classList.remove('d-none');
+    }
+
+    async saveNewProduct() {
+        const name = (document.getElementById('new-product-name')?.value || '').trim();
+        if (!name) {
+            this.showNewProductError('Укажите наименование сырья');
+            document.getElementById('new-product-name')?.focus();
+            return;
+        }
+
+        const saveBtn = document.getElementById('new-product-save-btn');
+        const originalText = saveBtn?.innerHTML;
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Сохранение...';
+        }
+
+        try {
+            const octaneVal = document.getElementById('new-product-octane')?.value || '';
+            const weightVal = document.getElementById('new-product-weight')?.value || '';
+            const response = await fetch('/processing/products/add/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCsrfToken()
+                },
+                body: JSON.stringify({
+                    name: name,
+                    octane: octaneVal.includes(',') ? octaneVal.replace(',', '.') : octaneVal,
+                    specificWeight: weightVal.includes(',') ? weightVal.replace(',', '.') : weightVal
+                })
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) {
+                this.showNewProductError(data.error || 'Не удалось сохранить сырьё');
+                return;
+            }
+
+            this.upsertProduct(data.product);
+            this.refreshAllRowSelects();
+            this.applyCreatedProduct(data.product);
+            this.newProductModal?.hide();
+            if (data.already_exists) {
+                alert('Такое сырьё уже есть в базе. Выбрана существующая запись.');
+            }
+        } catch (error) {
+            console.error('New product save error:', error);
+            this.showNewProductError('Ошибка при сохранении: ' + error.message);
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+    }
+
+    upsertProduct(product) {
+        if (!product || product.id == null) return;
+        const id = String(product.id);
+        const index = this.products.findIndex((item) => String(item.id) === id);
+        if (index >= 0) {
+            this.products[index] = product;
+        } else {
+            this.products.push(product);
+            this.products.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru'));
+        }
+    }
+
+    applyCreatedProduct(product) {
+        let row = this.targetRowForNewProduct;
+        if (!row || !document.body.contains(row)) {
+            row = [...document.querySelectorAll('.product-row')].find((item) => {
+                const select = item.querySelector('.product-name-select');
+                return !select?.value;
+            });
+        }
+        if (!row) {
+            this.addEmptyRow();
+            row = document.querySelector('#materials-tbody .product-row:last-child');
+        }
+        if (!row) return;
+
+        const select = row.querySelector('.product-name-select');
+        if (select) {
+            this.fillProductSelect(select, String(product.id));
+            select.value = String(product.id);
+        }
+        this.applyProductToRow(row);
+    }
+
+    resetRows(count = 5) {
         const tbody = document.getElementById('materials-tbody');
         if (tbody) tbody.innerHTML = '';
         this.rowSeq = 0;
@@ -183,6 +334,13 @@ class ProcessingCalculator {
     applyProductToRow(row) {
         const select = row.querySelector('.product-name-select');
         const productId = select?.value || '';
+
+        if (productId === this.customValue) {
+            select.value = row.dataset.productId || '';
+            this.openNewProductModal(row);
+            return;
+        }
+
         row.dataset.productId = productId;
 
         const octaneInput = row.querySelector('.material-octane');
@@ -212,8 +370,6 @@ class ProcessingCalculator {
         this.renumberRows();
         this.refreshAllRowSelects();
         this.calculateTotals();
-        this.validateTotalPercentage();
-        this.updateSelectedComposition();
     }
 
     renumberRows() {
@@ -332,10 +488,8 @@ class ProcessingCalculator {
         if (confirm('Вы уверены, что хотите очистить все данные?')) {
             const salePrice = document.getElementById('sale-price');
             if (salePrice) salePrice.value = '';
-            this.resetRows(4);
+            this.resetRows(5);
             this.calculateTotals();
-            this.validateTotalPercentage();
-            this.updateSelectedComposition();
         }
     }
 
@@ -355,7 +509,9 @@ class ProcessingCalculator {
         productRows.forEach((row, index) => {
             const productId = row.dataset.productId;
             const select = row.querySelector('.product-name-select');
-            const name = select?.value ? (select.selectedOptions?.[0]?.textContent.trim() || '') : '';
+            const name = (select?.value && select.value !== this.customValue)
+                ? (select.selectedOptions?.[0]?.textContent.trim() || '')
+                : '';
             const octaneInput = row.querySelector('.material-octane');
             const priceInput = row.querySelector('.material-price');
             const percentageInput = row.querySelector('.material-percentage');
@@ -367,7 +523,7 @@ class ProcessingCalculator {
             const sw = this.parseDecimal(specificWeightInput?.value);
             const specificWeight = (!isNaN(sw) && sw > 0) ? sw : null;
 
-            if (select?.value && name && percentage > 0) {
+            if (select?.value && select.value !== this.customValue && name && percentage > 0) {
                 const octanePercent = octane * percentage / 100;
                 const cost = price * percentage / 100;
 
@@ -413,7 +569,7 @@ class ProcessingCalculator {
                 const specWeightStr = material.specificWeight != null ? material.specificWeight.toFixed(3).replace('.', ',') : '—';
                 row.innerHTML = `
                     <td class="text-center">${index + 1}</td>
-                    <td class="fw-semibold">${material.name}</td>
+                    <td class="fw-semibold product-name-cell"></td>
                     <td class="text-center">${material.octane.toFixed(1).replace('.', ',')}</td>
                     <td class="text-center">${specWeightStr}</td>
                     <td class="text-end">${this.formatNumberDisplay(material.price, 2)}</td>
@@ -421,6 +577,7 @@ class ProcessingCalculator {
                     <td class="text-center fw-bold text-primary">${material.octanePercent.toFixed(2).replace('.', ',')}</td>
                     <td class="text-end fw-bold text-warning">${this.formatNumberDisplay(material.cost, 2)}</td>
                 `;
+                row.querySelector('.product-name-cell').textContent = material.name;
                 
                 selectedTbody.appendChild(row);
             });
@@ -517,7 +674,12 @@ class ProcessingCalculator {
         try {
             // Ma'lumotlarni olish
             const dateInput = document.getElementById('calculation-date');
-            const dateValue = dateInput?.value || new Date().toISOString().split('T')[0];
+            const dateValue = dateInput?.value || (() => {
+                const t = new Date();
+                const month = String(t.getMonth() + 1).padStart(2, '0');
+                const day = String(t.getDate()).padStart(2, '0');
+                return `${t.getFullYear()}-${month}-${day}`;
+            })();
             const salePrice = this.parseDecimal(document.getElementById('sale-price')?.value) || 0;
             
             // Umumiy qiymatlar

@@ -2316,15 +2316,18 @@ def _recompute_processing_totals(materials, sale_price):
     cleaned = []
 
     for item in materials or []:
-        name = str(item.get('name') or '').strip()
-        percentage = Decimal(str(item.get('percentage') or 0))
-        octane = Decimal(str(item.get('octane') or 0))
-        price = Decimal(str(item.get('price') or 0))
-        specific_weight = item.get('specificWeight')
-        if specific_weight in ('', None):
-            specific_weight = None
-        else:
-            specific_weight = float(specific_weight)
+        try:
+            name = str(item.get('name') or '').strip()
+            percentage = Decimal(str(item.get('percentage') or 0))
+            octane = Decimal(str(item.get('octane') or 0))
+            price = Decimal(str(item.get('price') or 0))
+            specific_weight = item.get('specificWeight')
+            if specific_weight in ('', None):
+                specific_weight = None
+            else:
+                specific_weight = float(specific_weight)
+        except (TypeError, ValueError, ArithmeticError):
+            continue
 
         if not name or percentage <= 0:
             continue
@@ -2363,6 +2366,79 @@ def processing_calculator(request):
     return render(request, 'calibration/processing.html', {
         'products': products,
         'products_data': products_data,
+    })
+
+
+def _serialize_processing_product(product):
+    return {
+        'id': product.id,
+        'name': product.name,
+        'octane': product.octane_number,
+        'specificWeight': product.specific_weight_kg_per_liter,
+    }
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_processing_product(request):
+    """Yangi xom ashyoni bazaga qo'shish"""
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Неверный формат данных JSON'}, status=400)
+
+    name = str(data.get('name') or '').strip()
+    if not name:
+        return JsonResponse({'success': False, 'error': 'Укажите наименование сырья'}, status=400)
+    if len(name) > 200:
+        return JsonResponse({'success': False, 'error': 'Название слишком длинное (максимум 200 символов)'}, status=400)
+
+    existing = Product.objects.filter(name__iexact=name).first()
+    if existing:
+        return JsonResponse({
+            'success': True,
+            'already_exists': True,
+            'product': _serialize_processing_product(existing),
+            'message': 'Такое сырьё уже есть в базе',
+        })
+
+    octane_raw = str(data.get('octane') or '').strip().replace(',', '.')
+    weight_raw = str(data.get('specificWeight') or '').strip().replace(',', '.')
+    octane_number = None
+    specific_weight = None
+    try:
+        if octane_raw:
+            octane_number = int(round(float(octane_raw)))
+            if octane_number < 0:
+                return JsonResponse({'success': False, 'error': 'Октановое число не может быть отрицательным'}, status=400)
+        if weight_raw:
+            specific_weight = float(weight_raw)
+            if specific_weight <= 0:
+                specific_weight = None
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'error': 'Неверный формат октана или удельного веса'}, status=400)
+
+    max_order = Product.objects.filter(is_for_processing=True).order_by('-processing_order').values_list(
+        'processing_order', flat=True
+    ).first() or 0
+
+    try:
+        product = Product.objects.create(
+            name=name,
+            octane_number=octane_number,
+            specific_weight_kg_per_liter=specific_weight,
+            is_for_processing=True,
+            is_for_blending=True,
+            processing_order=max_order + 1,
+        )
+    except Exception as e:
+        logger.error(f"Create processing product error: {e}", exc_info=True)
+        return JsonResponse({'success': False, 'error': 'Не удалось сохранить сырьё в базе'}, status=500)
+    return JsonResponse({
+        'success': True,
+        'already_exists': False,
+        'product': _serialize_processing_product(product),
+        'message': 'Сырьё сохранено в базе',
     })
 
 

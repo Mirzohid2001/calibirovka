@@ -175,9 +175,14 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="9" class="text-start py-2">
-                                        <button type="button" class="btn btn-outline-primary btn-sm min-touch-target" id="add-row-btn">
-                                            <i class="bi bi-plus-lg me-1"></i>Добавить строку
-                                        </button>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button type="button" class="btn btn-outline-primary btn-sm min-touch-target" id="add-row-btn">
+                                                <i class="bi bi-plus-lg me-1"></i>Добавить строку
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success btn-sm min-touch-target" id="new-product-btn">
+                                                <i class="bi bi-box-seam me-1"></i>Новое сырьё
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             </tfoot>
@@ -243,6 +248,43 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="newProductModal" tabindex="-1" aria-labelledby="newProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="newProductModalLabel">
+                    <i class="bi bi-box-seam me-2"></i>Новое сырьё
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">Введите название и параметры. Сырьё сохранится в базе и появится в списке.</p>
+                <div class="mb-3">
+                    <label for="new-product-name" class="form-label fw-bold">Наименование сырья</label>
+                    <input type="text" class="form-control form-control-lg input-no-zoom" id="new-product-name" placeholder="Например: Реформат" autocomplete="off">
+                </div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label for="new-product-octane" class="form-label fw-bold">Октан</label>
+                        <input type="text" class="form-control input-no-zoom" id="new-product-octane" placeholder="—" inputmode="decimal" autocomplete="off">
+                    </div>
+                    <div class="col-6">
+                        <label for="new-product-weight" class="form-label fw-bold">Уд. вес (кг/л)</label>
+                        <input type="text" class="form-control input-no-zoom" id="new-product-weight" placeholder="—" inputmode="decimal" autocomplete="off">
+                    </div>
+                </div>
+                <div class="alert alert-danger d-none mt-3 mb-0" id="new-product-error"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success min-touch-target" id="new-product-save-btn">
+                    <i class="bi bi-check-lg me-1"></i>Сохранить
+                </button>
             </div>
         </div>
     </div>
