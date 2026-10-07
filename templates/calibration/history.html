@@ -88,6 +88,7 @@
                                                   class="d-inline" 
                                                   onsubmit="return confirm('Вы уверены, что хотите удалить этот расчет?')">
                                                 {% csrf_token %}
+                                                <input type="hidden" name="calc_type" value="{{ calc.type }}">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
@@ -593,6 +594,7 @@
                                       class="d-inline" 
                                       onsubmit="return confirm('Вы уверены, что хотите удалить этот расчет?')">
                                     {% csrf_token %}
+                                    <input type="hidden" name="calc_type" value="{{ calc.type }}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </button>

@@ -46,48 +46,92 @@ class Tank(models.Model):
 
     def get_calibration_data(self):
         """Получить калибровочные данные как списки высоты и объема"""
-        calibrations = self.calibrations.all().order_by('height_cm')
+        calibrations = self.calibrations.all().order_by('height_cm', 'id')
         if not calibrations.exists():
             # Возвратить линейные данные по умолчанию, если калибровка не найдена
             return [0, self.height_cm], [0, self.capacity_liters]
-        
-        heights = [cal.height_cm for cal in calibrations]
-        volumes = [cal.volume_liters for cal in calibrations]
+
+        # Takroriy balandliklarni olib tashlash (CubicSpline qat'iy o'suvchi x talab qiladi)
+        height_map = {}
+        for cal in calibrations:
+            height_map[float(cal.height_cm)] = float(cal.volume_liters)
+
+        heights = sorted(height_map.keys())
+        volumes = [height_map[h] for h in heights]
+
+        if len(heights) < 2:
+            return [0, self.height_cm], [0, self.capacity_liters]
+
         return heights, volumes
+
+    @staticmethod
+    def _strictly_increasing_pairs(x_values, y_values):
+        """Spline uchun qat'iy o'suvchi (x, y) juftliklarini tayyorlash."""
+        pairs = []
+        for x, y in zip(x_values, y_values):
+            x = float(x)
+            y = float(y)
+            if not pairs:
+                pairs.append((x, y))
+                continue
+            if x == pairs[-1][0]:
+                # Bir xil x — oxirgi y ni yangilash
+                pairs[-1] = (x, y)
+            elif x > pairs[-1][0]:
+                pairs.append((x, y))
+            # x kamaygan bo'lsa — o'tkazib yuborish (noto'g'ri kalibrovka)
+        if len(pairs) < 2:
+            return [], []
+        xs, ys = zip(*pairs)
+        return list(xs), list(ys)
 
     def height_to_volume(self, height_cm, method='spline'):
         """Преобразовать высоту в объем, используя интерполяцию"""
         heights, volumes = self.get_calibration_data()
-        
+
         if height_cm <= 0:
             return 0.0
         if height_cm >= max(heights):
             return max(volumes)
-        
+
         if method == 'spline' and len(heights) >= 4:
-            # Использовать кубическую сплайн-интерполяцию
-            spline = scipy.interpolate.CubicSpline(heights, volumes, bc_type='natural')
-            return float(spline(height_cm))
-        else:
-            # Использовать линейную интерполяцию
-            return float(np.interp(height_cm, heights, volumes))
+            try:
+                x, y = self._strictly_increasing_pairs(heights, volumes)
+                if len(x) >= 4:
+                    spline = scipy.interpolate.CubicSpline(x, y, bc_type='natural')
+                    return float(spline(height_cm))
+            except ValueError:
+                # Noto'g'ri kalibrovka — chiziqli interpolatsiyaga o'tish
+                pass
+
+        return float(np.interp(height_cm, heights, volumes))
 
     def volume_to_height(self, volume_liters, method='spline'):
         """Преобразовать объем в высоту, используя интерполяцию"""
         heights, volumes = self.get_calibration_data()
-        
+
         if volume_liters <= 0:
             return 0.0
         if volume_liters >= max(volumes):
             return max(heights)
-        
+
         if method == 'spline' and len(volumes) >= 4:
-            # Использовать кубическую сплайн-интерполяцию
-            spline = scipy.interpolate.CubicSpline(volumes, heights, bc_type='natural')
-            return float(spline(volume_liters))
-        else:
-            # Использовать линейную интерполяцию
-            return float(np.interp(volume_liters, volumes, heights))
+            try:
+                # Hajm bo'yicha interpolatsiya: x=volume qat'iy o'sishi shart
+                x, y = self._strictly_increasing_pairs(volumes, heights)
+                if len(x) >= 4:
+                    spline = scipy.interpolate.CubicSpline(x, y, bc_type='natural')
+                    return float(spline(volume_liters))
+            except ValueError:
+                pass
+
+        # Chiziqli: np.interp uchun hajm bo'yicha tartib + qat'iy o'sish
+        ordered_volumes, ordered_heights = self._strictly_increasing_pairs(volumes, heights)
+        if len(ordered_volumes) < 2:
+            ordered = sorted(zip(volumes, heights), key=lambda item: item[0])
+            ordered_volumes = [item[0] for item in ordered]
+            ordered_heights = [item[1] for item in ordered]
+        return float(np.interp(volume_liters, ordered_volumes, ordered_heights))
 
 
 class Product(models.Model):

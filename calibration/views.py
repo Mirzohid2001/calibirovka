@@ -105,6 +105,18 @@ def normalize_density_input(value):
     return value, None
 
 
+def fill_percentage_of(volume_liters, capacity_liters):
+    """Rezervuar to'ldirish foizi; sig'im 0 bo'lsa xato bermaslik."""
+    try:
+        capacity = float(capacity_liters)
+        volume = float(volume_liters)
+    except (TypeError, ValueError):
+        return 0.0
+    if capacity <= 0:
+        return 0.0
+    return (volume / capacity) * 100.0
+
+
 def home(request):
     """Главная страница с калькулятором"""
     tanks = Tank.objects.all()
@@ -196,7 +208,7 @@ def home(request):
                 final_height = tank.volume_to_height(final_volume)
                 
                 # 6. Рассчитать процент заполнения
-                fill_percentage = (final_volume / tank.capacity_liters) * 100
+                fill_percentage = fill_percentage_of(final_volume, tank.capacity_liters)
                 
                 # 7. Определить метод интерполяции
                 calibration_points_count = tank.calibrations.count()
@@ -355,51 +367,44 @@ def history(request):
 def delete_calculation(request, calculation_id):
     """Удалить расчет"""
     if request.method == 'POST':
-        # Попробуем найти расчет во всех моделях
+        calc_type = (request.POST.get('calc_type') or '').strip()
+        type_model_map = {
+            'transfer': TransferCalculation,
+            'volume_weight': VolumeWeightCalculation,
+            'adding': AddingCalculation,
+            'density': DensityTemperatureCalculation,
+            'gasoline_blend': GasolineBlendCalculation,
+            'processing': ProcessingCalculation,
+        }
+
         calculation = None
-        
-        # Проверяем ProcessingCalculation
-        try:
-            calculation = ProcessingCalculation.objects.get(id=calculation_id)
-            calculation.delete()
-            messages.success(request, 'Расчет переработки успешно удален.')
-            return redirect('calibration:history')
-        except ProcessingCalculation.DoesNotExist:
-            pass
-        
-        # Проверяем TransferCalculation
-        try:
-            calculation = TransferCalculation.objects.get(id=calculation_id)
-        except TransferCalculation.DoesNotExist:
-            pass
-        
-        # Проверяем VolumeWeightCalculation
-        if not calculation:
+        if calc_type in type_model_map:
             try:
-                calculation = VolumeWeightCalculation.objects.get(id=calculation_id)
-            except VolumeWeightCalculation.DoesNotExist:
-                pass
-        
-        # Проверяем AddingCalculation
-        if not calculation:
-            try:
-                calculation = AddingCalculation.objects.get(id=calculation_id)
-            except AddingCalculation.DoesNotExist:
-                pass
-        
-        # Проверяем GasolineBlendCalculation
-        if not calculation:
-            try:
-                calculation = GasolineBlendCalculation.objects.get(id=calculation_id)
-            except GasolineBlendCalculation.DoesNotExist:
-                pass
-        
+                calculation = type_model_map[calc_type].objects.get(id=calculation_id)
+            except type_model_map[calc_type].DoesNotExist:
+                calculation = None
+        else:
+            # Eski formalar uchun: barcha modellardan qidirish (ID to'qnashuvi mumkin)
+            for model in (
+                TransferCalculation,
+                VolumeWeightCalculation,
+                AddingCalculation,
+                DensityTemperatureCalculation,
+                GasolineBlendCalculation,
+                ProcessingCalculation,
+            ):
+                try:
+                    calculation = model.objects.get(id=calculation_id)
+                    break
+                except model.DoesNotExist:
+                    continue
+
         if calculation:
             calculation.delete()
             messages.success(request, "Расчет удален успешно.")
         else:
             messages.error(request, "Расчет не найден.")
-    
+
     return redirect('calibration:history')
 
 
@@ -546,7 +551,7 @@ def calculate_transfer(request):
         
         final_volume = initial_volume - volume_removed
         final_height = tank.volume_to_height(final_volume)
-        fill_percentage = (final_volume / tank.capacity_liters) * 100
+        fill_percentage = fill_percentage_of(final_volume, tank.capacity_liters)
         
         # Определить метод интерполяции
         interpolation_method = 'spline' if tank.calibrations.count() >= 4 else 'linear'
@@ -657,7 +662,7 @@ def volume_weight_calculator(request):
                 weight = volume * density
                 
                 # 3. Рассчитать процент заполнения
-                fill_percentage = (volume / tank.capacity_liters) * 100
+                fill_percentage = fill_percentage_of(volume, tank.capacity_liters)
                 
                 # 4. Определить метод интерполяции
                 calibration_points_count = tank.calibrations.count()
@@ -818,7 +823,7 @@ def adding_calculator(request):
                 final_height = tank.volume_to_height(final_volume)
                 
                 # 7. Рассчитать процент заполнения
-                fill_percentage = (final_volume / tank.capacity_liters) * 100
+                fill_percentage = fill_percentage_of(final_volume, tank.capacity_liters)
                 
                 # 8. Определить метод интерполяции
                 calibration_points_count = tank.calibrations.count()
@@ -965,8 +970,9 @@ def density_calculator(request):
 
 def density_quick_calculator(request):
     """
-    Упрощенный калькулятор пересчета плотности, требующий только фактическую плотность,
-    текущую и целевую температуры. Использует типичный коэффициент 0.00065 1/°C.
+    Упрощенный калькулятор пересчета плотности: фактическая плотность,
+    текущая и целевая температуры. Коэффициент берётся из таблицы ГОСТ
+    (как в основном калькуляторе плотности).
     """
     result = None
     
